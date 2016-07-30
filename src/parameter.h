@@ -71,6 +71,8 @@ public:
     void accept();
     void reject();
     double get_acceptance() const;
+    void stop_adapt();
+    void start_adapt();
     void adapt();
     double propose(gsl_rng *);
     double get_prior_ratio() const;
@@ -102,6 +104,9 @@ struct MCMCoptions {
     int lhs_divides;
     int lhs_iterations;
     int num_threads;
+    double heat_factor;
+    int heat_length;
+    double cool_rate;
     gsl_rng ** rng;
     MCMCoptions();
     MCMCoptions(const MCMCoptions&);

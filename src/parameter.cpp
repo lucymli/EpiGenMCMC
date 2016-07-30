@@ -93,6 +93,14 @@ Parameter::Parameter(std::string filename) {
             if (item==2) {
                 std::string str1 ("True");
                 bool estimate_or_not = (line.compare(str1)==0);
+                if (!estimate_or_not) {
+                    str1 = "TRUE";
+                    estimate_or_not = (line.compare(str1)==0);
+                    if (!estimate_or_not) {
+                        str1 = "true";
+                        estimate_or_not = (line.compare(str1)==0);
+                    }
+                }
                 estimate[i] = estimate_or_not;
                 if (estimate[i]) params_to_estim.push_back(i);
             }
@@ -212,6 +220,15 @@ double Parameter::get_acceptance() const {
     return (average_accept);
 }
 
+void Parameter::stop_adapt() {
+    stop_adapting = true;
+}
+
+void Parameter::start_adapt() {
+    stop_adapting = false;
+    reset();
+}
+
 void Parameter::adapt() {
     if (!stop_adapting) {
         int itr=total_params;
@@ -234,7 +251,7 @@ void Parameter::adapt() {
         }
     }
     --max_adapt_times;
-    if (max_adapt_times == 0) stop_adapting = true;
+    if (max_adapt_times == 0) stop_adapt();
 }
 
 double Parameter::get_transform(double value, std::string transformation, bool reverse) const {
@@ -254,7 +271,7 @@ double Parameter::get_transform(double value, std::string transformation, bool r
 }
 
 double Parameter::propose(gsl_rng * rng) {
-    adapt();
+    if (!stop_adapting) adapt();
     std::string trans = transform[curr_param_to_estimate];
     old_param_value = parameter_values[curr_param_to_estimate];
     double old = get_transform(old_param_value, trans, false);
@@ -360,6 +377,9 @@ MCMCoptions::MCMCoptions(std::string filename) {
     use_lhs = false;
     num_threads = omp_get_max_threads();
     num_groups = 1;
+    heat_factor = 1.0;
+    heat_length = 0;
+    cool_rate = 1.0;
     while (file >> line) {
         if (line == "particles") file >> particles;
         else if (line == "iterations") file >> iterations;
@@ -391,6 +411,9 @@ MCMCoptions::MCMCoptions(std::string filename) {
         else if (line == "num_threads") {
             file >> num_threads;
         }
+        else if (line=="heat_factor") file >> heat_factor;
+        else if (line=="heat_length") file >> heat_length;
+        else if (line=="cool_rate") file >> cool_rate;
         else file >> line;
     }
     file.close();
