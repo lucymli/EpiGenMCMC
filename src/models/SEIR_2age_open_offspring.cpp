@@ -8,7 +8,7 @@
 
 #include "../model.h"
 
-void Model::simulate(std::vector<double> & model_params, std::vector<std::string> & param_names, Trajectory * traj, int start_dt, int end_dt, double step_size, int total_dt, std::mt19937_64 rng) {
+void Model::simulate(std::vector<double> & model_params, std::vector<std::string> & param_names, Trajectory * traj, int start_dt, int end_dt, double step_size, int total_dt, gsl_rng * rng) {
     if ((traj->get_state(1)+traj->get_state(2)+traj->get_state(6)+traj->get_state(5)) < 1.0) {
         return;
     }
