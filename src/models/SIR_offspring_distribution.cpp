@@ -8,7 +8,7 @@
 
 #include "../model.h"
 
-void Model::simulate(std::vector<double> & model_params, std::vector<std::string> & param_names, Trajectory * traj, int start_dt, int end_dt, double step_size, int total_dt,  std::mt19937_64 rng) {
+void Model::simulate(std::vector<double> & model_params, std::vector<std::string> & param_names, Trajectory * traj, int start_dt, int end_dt, double step_size, int total_dt,  gsl_rng * rng) {
     if (traj->get_state(1) < 1.0) {
         return;
     }
@@ -33,8 +33,10 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     // /* For slightly faster implementation, call parameters by index
     double rateI2R=model_params[2];
     double k=model_params[1];
-    double Rt=model_params[0];
-    double Beta = Rt * rateI2R / traj->get_state(0);
+//    double Rt=model_params[0];
+//    double Beta = Rt * rateI2R / traj->get_state(0);
+    double Beta = model_params[0];
+    double Rt = Beta/rateI2R*traj->get_state(0);
     double S2I = 0.0;
     double I2R = 0.0;
     double total_infectious=0.0;
@@ -53,8 +55,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
                 I2R = infected*p;
             }
             else {
-                std::binomial_distribution<int> distribution(infected, p);
-                I2R = distribution(rng);
+                I2R = gsl_ran_binomial(rng, p, infected);
             }
         }
         // Infections: S --> I
@@ -72,13 +73,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
                     Rt = Beta / rateI2R * currS;
                     // Draw from the negative binomial distribution (gamma-poisson mixture) to determine
                     // number of secondary infections
-                    double alpha = k*I2R;
-                    double scale = Rt / k;
-                    double gamma_number;
-                    std::gamma_distribution<double> gam (alpha, scale);
-                    gamma_number = gam(rng);
-                    std::poisson_distribution<int> pois (gamma_number);
-                    S2I = pois(rng);
+                    S2I = gsl_ran_negative_binomial(rng, k/(k+Rt), k*I2R);
                 }
                 if (S2I > 0) {
                     S2I = std::min(currS, S2I);
