@@ -9,6 +9,7 @@
 #ifndef EpiGenMCMC_model_h
 #define EpiGenMCMC_model_h
 
+#include <random>
 #include "parameter.h"
 #include "trajectory.h"
 
