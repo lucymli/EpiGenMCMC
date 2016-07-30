@@ -207,6 +207,20 @@ namespace EpiGenMCMC_MCMC {
             newloglik = EpiGenPfilter::pfilter(sim_model, model_params, options, particles, temptraj, epi_data, tree_data, multitree_data);
             prior_ratio = model_params.get_prior_ratio();
             accept_with_prob = (newloglik - loglik) + prior_ratio + correction_factor;
+            if (options.heat_length > 0) {
+                if (iter <= (options.heat_length*model_params.get_total_params())) accept_with_prob += log(options.heat_factor);
+                else {
+                    if ((iter % model_params.get_total_params())==0) {
+                        if (options.heat_factor > 1.0) {
+                            options.heat_factor -= std::min(options.heat_factor-1.0, options.cool_rate);
+                            accept_with_prob += log(options.heat_factor);
+                        }
+                        else {
+                            model_params.start_adapt();
+                        }
+                    }
+                }
+            }
             accept = accept_with_prob >= 0.0;
             if (!accept) {
                 ran_num = gsl_rng_uniform(options.rng[0]);
@@ -214,8 +228,8 @@ namespace EpiGenMCMC_MCMC {
             }
             if (accept) {
                 loglik = newloglik;
-                model_params.accept();
                 traj = temptraj;
+                model_params.accept();
             }
             else {
                 model_params.reject();
