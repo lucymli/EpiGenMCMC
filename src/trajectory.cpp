@@ -307,10 +307,10 @@ void Trajectory::replace(Trajectory * new_traj) {
     for (int i=0; i!=trajectory.size(); ++i) {
         trajectory[i] = new_traj->get_traj(i);
     }
-    for (int i=0; i!=trajectory.size(); ++i) {
+    for (int i=0; i!=trajectory2.size(); ++i) {
         trajectory2[i] = new_traj->get_traj2(i);
     }
-    for (int i=0; i!=trajectory.size(); ++i) {
+    for (int i=0; i!=recoveries.size(); ++i) {
         recoveries[i] = new_traj->recoveries[i];
     }
     num_time_steps = new_traj->num_time_steps;
