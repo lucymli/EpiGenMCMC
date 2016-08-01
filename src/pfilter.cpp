@@ -53,6 +53,10 @@ namespace EpiGenPfilter {
                 particles.start_particle_tracing(total_dt, num_groups);
             }
         }
+        std::vector <Model> models;
+        for (int i=0; i<options.num_threads; ++i) {
+            models.push_back(sim_model);
+        }
         // Simulate model and calculate likelihood assuming no observed data
         if (model_params.param_exists("time_before_data")) {
             if (add_dt > 0) {
@@ -66,7 +70,7 @@ namespace EpiGenPfilter {
                     for (int i=tn; i<num_particles; i+=options.num_threads) {
                         // Adjust length of trajectory
                         particles.get_traj(i)->resize(add_dt, num_groups);
-                        sim_model.simulate(values[tn], param_names, particles.get_traj(i), 0, add_dt, sim_dt, total_dt, options.rng[tn]);
+                        models[tn].simulate(values[tn], param_names, particles.get_traj(i), 0, add_dt, sim_dt, total_dt, options.rng[tn]);
                         if (options.which_likelihood<2) {
                             double w = likelihood_calc.binomial_lik(reporting_rate, particles.get_traj(i)->get_total_traj(), add_dt+total_dt, 0, add_dt, num_groups, false);
                             particles.set_weight(w, i, false);
@@ -100,7 +104,7 @@ namespace EpiGenPfilter {
                 for (int i=tn; i<num_particles; i+=options.num_threads) {
                     // Adjust length of trajectory
                     particles.get_traj(i)->resize(end_dt-start_dt, options.num_groups);
-                    sim_model.simulate(values[tn], param_names, particles.get_traj(i), start_dt, end_dt, sim_dt, total_dt, options.rng[tn]);
+                    models[tn].simulate(values[tn], param_names, particles.get_traj(i), start_dt, end_dt, sim_dt, total_dt, options.rng[tn]);
                     double w = 1.0;
                     if (options.which_likelihood<2) {
                         double A = particles.get_traj(i)->get_total_traj();
