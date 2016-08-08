@@ -51,7 +51,9 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         else if (recoveries > 0) {
             traj->set_traj(recoveries, t-start_dt);
             if (t*step_size<(R0_T0)) R0_now = R0_0;
-            else R0_now = R0_1;
+            else {
+                R0_now = R0_1;
+            }
             new_infections = gsl_ran_negative_binomial(rng, k/(k+R0_now), k*recoveries);
             if (new_infections > 100) {
                 double infection_counter = 0;

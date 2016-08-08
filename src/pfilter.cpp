@@ -90,15 +90,7 @@ namespace EpiGenPfilter {
         for (t=0; t!=total_steps; ++t) {
             start_dt = t*options.pfilter_every;
             end_dt = std::min(total_dt, (t+1)*options.pfilter_every);
-            if (add_dt < 0) {
-                start_dt -= add_dt;
-                end_dt = std::min(total_dt, end_dt-add_dt);
-            }
             omp_set_num_threads(options.num_threads);
-//            std::vector <Trajectory *> curr_trajs;
-//            for (int i=0; i!=num_particles; ++i) {
-//                curr_trajs.push_back(particles.get_traj(i));
-//            }
 #pragma omp parallel for shared (particles, values) schedule(static,1)
             for (int tn=0; tn<options.num_threads; tn++) {
                 for (int i=tn; i<num_particles; i+=options.num_threads) {
@@ -108,10 +100,6 @@ namespace EpiGenPfilter {
                     double w = 1.0;
                     if (options.which_likelihood<2) {
                         double A = particles.get_traj(i)->get_total_traj();
-//                        double B = particles.get_traj(i)->get_state(0);
-//                        if (i==0) {
-//                            std::cout << "current traj: " << A << "\tcurrent prevalence: " << B << std::endl;
-//                        }
                         w *= likelihood_calc.binomial_lik(reporting_rate, A, epi_data.get_data_ptr(0), add_dt+total_dt, start_dt, end_dt, add_dt, options.num_groups, false);
                     }
                     if (options.which_likelihood != 1) {
