@@ -16,9 +16,9 @@ double Likelihood::binomial_lik(double reporting_rate, double process, int size,
     double loglik=0.0;
     for (int group_id=0; group_id!=num_groups; ++group_id) {
         double total_incidence = process;//0.0;
-//        for (int i=start; i!=end; ++i) {
-//            total_incidence += *(process+group_id*size+i-start);
-//        }
+        //        for (int i=start; i!=end; ++i) {
+        //            total_incidence += *(process+group_id*size+i-start);
+        //        }
         loglik += log(1.0-reporting_rate) * (double)total_incidence;//dbinom(0.0, total_incidence, params[5], 1);
     }
     if (return_log) return(loglik);
@@ -31,7 +31,7 @@ double Likelihood::binomial_lik(double reporting_rate, double process, std::vect
         double total_incidence = process;//0.0;
         double total_data = 0.0;
         for (int i=start; i!=end; ++i) {
-//            total_incidence += *(process+group_id*size+i-start);
+            //            total_incidence += *(process+group_id*size+i-start);
             total_data += *(data+group_id*size+i-shift);
         }
         if (total_data < 0) {
@@ -59,9 +59,9 @@ double Likelihood::coalescent_lik(std::vector<double>::iterator sim_coal_rate, s
         // Loop over each simulation time step
         double coal_rate = *(sim_coal_rate+deltaT-start);
         int first_index;
-        if ((deltaT-shift)==0) first_index = 0;
-        else first_index = *(indices+deltaT-shift-1)+1;
-        int last_index = *(indices+deltaT-shift);
+        if ((deltaT)==0) first_index = 0;
+        else first_index = *(indices+deltaT-1)+1;
+        int last_index = *(indices+deltaT);
         for (int event=first_index; event<=last_index; ++event) {
             // Loop over event during a simulation time step (either coalescence or sampling)
             double binom_coeff = *(binomial+event);
