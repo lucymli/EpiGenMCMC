@@ -68,12 +68,13 @@ void Trajectory::resize(int length, int groups) {
 void Trajectory::print_to_file(int iteration, std::string filename, int every, bool sum_across) {
     std::ofstream file(filename, std::ios::app);
     file << iteration;
+    int total_steps = (int) trajectory.size();
     if (num_groups > 1) {
         for (int i=0; i<num_groups; ++i) {
-            for (int t=0; t<num_time_steps; t+=every) {
+            for (int t=0; t<total_steps; t+=every) {
                 double count = 0.0;
                 if (sum_across) {
-                    for (int j=0; j<std::min(every, num_time_steps-t); ++j) {
+                    for (int j=0; j<std::min(every, iteration-t); ++j) {
                         count += trajectory[i*num_time_steps+t+j];
                     }
                 }
@@ -85,10 +86,10 @@ void Trajectory::print_to_file(int iteration, std::string filename, int every, b
         }
     }
     else {
-        for (int t=0; t<num_time_steps; t+=every) {
+        for (int t=0; t<total_steps; t+=every) {
             double count = 0.0;
             if (sum_across) {
-                for (int j=0; j<std::min(every, num_time_steps-t); ++j) {
+                for (int j=0; j<std::min(every, total_steps-t); ++j) {
                     count += trajectory[t+j];
                 }
             }
@@ -104,12 +105,13 @@ void Trajectory::print_to_file(int iteration, std::string filename, int every, b
 
 void Trajectory::print_to_file(std::string filename, int every, bool sum_across) {
     std::ofstream file(filename, std::ios::app);
+    int total_steps = (int) trajectory.size();
     if (num_groups > 1) {
         for (int i=0; i<num_groups; ++i) {
             for (int t=0; t<num_time_steps; t+=every) {
                 double count = 0.0;
                 if (sum_across) {
-                    for (int j=0; j<std::min(every, num_time_steps-t); ++j) {
+                    for (int j=0; j<std::min(every, total_steps-t); ++j) {
                         count += trajectory[i*num_time_steps+t+j];
                     }
                 }
@@ -121,7 +123,7 @@ void Trajectory::print_to_file(std::string filename, int every, bool sum_across)
         }
     }
     else {
-        for (int t=0; t<num_time_steps; t+=every) {
+        for (int t=0; t<total_steps; t+=every) {
             double count = 0.0;
             if (sum_across) {
                 for (int j=0; j<std::min(every, num_time_steps-t); ++j) {

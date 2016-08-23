@@ -14,6 +14,7 @@
 #include <vector>
 #include <numeric>
 #include <iostream>
+#include <cmath>
 
 class Trajectory{
     std::vector <double> trajectory;
