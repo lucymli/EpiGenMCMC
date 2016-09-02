@@ -12,6 +12,9 @@
 
 Model::Model() {
     use_deterministic = false;
+    custom_prob.resize(0);
+    custom_prob_alpha = 1.0;
+    custom_prob_scale = 1.0;
 }
 
 void Model::set_deterministic(bool logical) {

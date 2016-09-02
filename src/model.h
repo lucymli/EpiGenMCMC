@@ -16,10 +16,14 @@
 
 class Model{
     bool use_deterministic;
+    double custom_prob_alpha;
+    double custom_prob_scale;
 public:
     Model();
     void set_deterministic(bool);
     void simulate(std::vector<double> &, std::vector<std::string>&, Trajectory *, int, int, double, int, gsl_rng *);
+    std::vector <double> custom_prob;
+    void set_custom_prob(double, double);
 };
 
 
