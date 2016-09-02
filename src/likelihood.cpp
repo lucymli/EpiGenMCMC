@@ -32,7 +32,15 @@ double Likelihood::binomial_lik(double reporting_rate, double process, std::vect
         double total_data = 0.0;
         for (int i=start; i!=end; ++i) {
             //            total_incidence += *(process+group_id*size+i-start);
-            total_data += *(data+group_id*size+i-shift);
+//            double curr_inc = *(data+group_id*size+i-shift);
+            double curr_inc = *(data+group_id*(size-shift)+i);
+            total_data += curr_inc;
+            if (total_data < 0) {
+                if (curr_inc >= 0) {
+                    total_data = curr_inc;
+                }
+            }
+            
         }
         if (total_data < 0) {
             if (return_log) return(0.0);
@@ -46,7 +54,7 @@ double Likelihood::binomial_lik(double reporting_rate, double process, std::vect
             loglik += log(1.0-reporting_rate) * (double)total_incidence;
         }
         else {
-            loglik += gsl_ran_binomial_pdf(total_data, reporting_rate, total_incidence);
+            loglik += log(gsl_ran_binomial_pdf(total_data, reporting_rate, total_incidence));
         }
     }
     if (return_log) return(loglik);
