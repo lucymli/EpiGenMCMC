@@ -4,10 +4,21 @@ LFLAGS=-liomp
 LDFLAGS=-L/usr/local/lib -L/Users/Lucy/libomp_oss/exports/mac_32e/lib.thin -lgsl
 
 BASEOBJ = data.o likelihood.o main.o MCMC.o model.o parameter.o particle.o pfilter.o trajectory.o
-SIROFFSPRINGOBJ = SIR_offspring_distribution.o
+COMMAND = $(CC) $(CFLAGS) $(LFLAGS) $(LDFLAGS) $(BASEOBJ)
 
+SIROFFSPRINGOBJ = SIR_offspring_distribution.o
 SIRoffspring : $(BASEOBJ) $(SIROFFSPRINGOBJ)
-	$(CC) $(CFLAGS) $(LFLAGS) $(LDFLAGS) $(BASEOBJ) $(SIROFFSPRINGOBJ) -o SIRoffspring
+	$(COMMAND) $(SIROFFSPRINGOBJ) -o SIRoffspring
+
+BRANCHINGEBOLALIBERIAOBJ = branching_process_EbolaLiberia.o
+EbolaLiberiaBranching : $(BASEOBJ) $(BRANCHINGEBOLALIBERIAOBJ)
+	$(COMMAND) $(BRANCHINGEBOLALIBERIAOBJ) -o EbolaLiberiaBranching
+
+BRANCHINGPOLIOPAKENVOBJ = branching_process_PakEnv.o
+PolioPakEnvBranching : $(BASEOBJ) $(BRANCHINGPOLIOPAKENVOBJ)
+$(COMMAND) $(BRANCHINGPOLIOPAKENVOBJ) -o PolioPakEnvBranching
+
+
 
 data.o : data.cpp data.h
 	$(CC) $(CFLAGS) data.cpp -o data.o
@@ -33,11 +44,18 @@ pfilter.o : pfilter.h pfilter.cpp model.h parameter.h trajectory.h data.h likeli
 trajectory.o : trajectory.h trajectory.cpp
 	$(CC) $(CFLAGS) trajectory.cpp
 
-SIR_offspring_distribution.o : model.h SIR_offspring_distribution.cpp
-	$(CC) $(CFLAGS) SIR_offspring_distribution.cpp
-
 main.o : main.cpp MCMC.h pfilter.h trajectory.h model.h parameter.h data.h likelihood.h particle.h
 	$(CC) $(CFLAGS) main.cpp
+
+SIR_offspring_distribution.o : model.h parameter.h trajectory.h SIR_offspring_distribution.cpp
+$(CC) $(CFLAGS) SIR_offspring_distribution.cpp
+
+branching_process_EbolaLiberia.o : model.h parameter.h trajectory.h branching_process_EbolaLiberia.cpp
+$(CC) $(CFLAGS) branching_process_EbolaLiberia.cpp
+
+branching_process_PakEnv
+branching_process_PakEnv.o : model.h parameter.h trajectory.h branching_process_PakEnv.cpp
+$(CC) $(CFLAGS) branching_process_PakEnv.cpp
 
 clean : rm *.o *~ SIRoffspring
 

@@ -10,30 +10,71 @@
 #include "../model.h"
 
 
+
+void Model::set_custom_prob(double alpha, double scale) {
+    custom_prob.resize(0);
+    bool stop = false;
+    double w = 0.0;
+    while ((!stop)&(custom_prob.size()<400)) {
+        w = gsl_cdf_gamma_P(custom_prob.size(), alpha, scale);
+        custom_prob.push_back(w);
+        stop = w > 0.99999;
+    }
+    for (int i=1; i!=custom_prob.size(); ++i) custom_prob[i-1] = custom_prob[i]-custom_prob[i-1];
+    custom_prob.pop_back();
+}
+
+
 void Model::simulate(std::vector<double> & model_params, std::vector<std::string> & param_names, Trajectory * traj, int start_dt, int end_dt, double step_size, int total_dt, gsl_rng * rng) {
     if ((traj->get_state(0)+traj->get_state(1)) < 1.0) {
         return;
     }
-    double gamma_prob[302] = {0.0198378317110871,0.0299232257444226,0.0374206601041429,0.04270740692377,0.0461637401551711,0.0481335589188116,0.048915740797219,0.0487646798368677,0.0478939725644678,0.0464810811732165,0.0446720923948745,0.0425862003199655,0.0403197654887721,0.0379499073530114,0.0355376373591478,0.033130563361502,0.0307652059207639,0.028468969803729,0.0262618130807815,0.0241576534604084,0.0221655479207897,0.0202906778617713,0.0185351682164913,0.0168987653948056,0.015379395659721,0.0139736225931418,0.0126770196897725,0.011484471813484,0.0103904172360917,0.00938904022782128,0.00847442265438747,0.00764066173080291,0.00688195996166585,0.00619269233853104,0.00556745504618317,0.00500109923241354,0.00448875280368521,0.00402583270724777,0.00360804973600981,0.00323140753468931,0.00289219718473532,0.00258698849287775,0.0023126188967123,0.00206618072422404,0.00184500739726257,0.00164665904714645,0.00146890790985144,0.00130972378532268,0.00116725977746401,0.00103983847590938,0.000925938695699124,0.000824182854733291,0.000733325039879107,0.0006522397896358,0.000579911603243222,0.000515425172203376,0.000457956319595554,0.000406763624725248,0.000361180704995689,0.00032060912303733,0.000284511884687588,0.000252407492098317,0.000223864515817795,0.000198496649939095,0.000175958215169914,0.00015594007582509,0.000138165938156076,0.0001223889990426,0.000108388915784574,9.59690695195858e-05,8.49540965887075e-05,7.51876639598636e-05,6.65304665627975e-05,5.88584260775571e-05,5.20610723341308e-05,4.6040090015298e-05,4.07080148049355e-05,3.59870644809357e-05,3.18080917305341e-05,2.81096466341335e-05,2.48371378747114e-05,2.19420827254346e-05,1.93814368127931e-05,1.71169954972239e-05,1.51148595031181e-05,1.3344958142758e-05,1.1780624131541e-05,1.03982145910342e-05,9.1767733679804e-06,8.09773029830652e-06,7.14463348139294e-06,6.30291103542735e-06,5.55965917026224e-06,4.90345373604928e-06,4.32418270979174e-06,3.81289734152634e-06,3.36167992753822e-06,2.96352638651243e-06,2.61224201958399e-06,2.3023489947871e-06,2.02900426538033e-06,1.78792676353012e-06,1.57533283928757e-06,1.38787902503879e-06,1.22261130874879e-06,1.07692018369576e-06,9.48500831765564e-07,8.35317854552819e-07,7.35574048227328e-07,6.47682756871326e-07,5.70243405162429e-07,5.02019846138069e-07,4.41921204075157e-07,3.88984930155267e-07,3.4236181611913e-07,3.01302743088705e-07,2.65146966937913e-07,2.33311762576349e-07,2.05283273158052e-07,1.8060842332801e-07,1.58887775825178e-07,1.39769219198449e-07,1.22942396263426e-07,1.0813378081842e-07,9.51023325646005e-08,8.36356605082855e-08,7.35466370027638e-08,6.46704088058669e-08,5.68617595231302e-08,4.99927831354441e-08,4.39508313077042e-08,3.86367011717681e-08,3.39630401580138e-08,2.98529355680088e-08,2.62386739002807e-08,2.30606449491688e-08,2.02663770210165e-08,1.78096851710663e-08,1.56499221359852e-08,1.37513165299197e-08,1.20823906435419e-08,1.06154471879449e-08,9.32611721182752e-09,8.19296142040571e-09,7.19711978902637e-09,6.32200203298794e-09,5.55301604698855e-09,4.87732720877432e-09,4.2836483249431e-09,3.76205366858784e-09,3.30381455526663e-09,2.90125645729944e-09,2.54763177220951e-09,2.23700769019786e-09,1.96416904962859e-09,1.72453129554384e-09,1.51406431836421e-09,1.32922617357423e-09,1.16690368479055e-09,1.02436048532439e-09,8.99192498238222e-10,7.89286636049269e-10,6.92786161771153e-10,6.08059824713791e-10,5.33674437974696e-10,4.68370231487825e-10,4.11041534142953e-10,3.60716012615114e-10,3.16540238465279e-10,2.77764145018011e-10,2.43729147975102e-10,2.13856821140723e-10,1.87639015436503e-10,1.64629421206541e-10,1.44436462790054e-10,1.26715860027105e-10,1.11165632254995e-10,9.75203251485368e-11,8.55471249394668e-11,7.50414175243463e-11,6.58236798400935e-11,5.7736371239514e-11,5.06410469114371e-11,4.44163594792713e-11,3.89555054880475e-11,3.41650041590924e-11,2.99625879662813e-11,2.62764254799208e-11,2.30430119430025e-11,2.02069472265975e-11,1.771927049532e-11,1.55374602073266e-11,1.36239908243851e-11,1.19457777003618e-11,1.04739550366162e-11,9.18320974818698e-12,8.05133737458164e-12,7.05879799056675e-12,6.18838313926062e-12,5.42521583213329e-12,4.75608441519171e-12,4.16922052437485e-12,3.65485419706602e-12,3.20365955985835e-12,2.80830914078933e-12,2.46147546789643e-12,2.15760742605653e-12,1.89104287784403e-12,1.65756297576536e-12,1.45272682772202e-12,1.27320376464013e-12,1.11577413974828e-12,9.779954623923e-13,8.56981152708158e-13,7.51065876158918e-13,6.58140208997793e-13,5.76760861292769e-13,5.05373520809371e-13,4.42867964522975e-13,3.88022947106492e-13,3.40061312442685e-13,2.9787283750693e-13,2.61124455391837e-13,2.28705943072782e-13,2.00395255944841e-13,1.75526260193237e-13,1.53876911213047e-13,1.34781075189494e-13,1.18016707517654e-13,1.03472785895065e-13,9.05941988094128e-14,7.93809462606987e-14,6.94999613415348e-14,6.09512440519211e-14,5.32907051820075e-14,4.67403893367191e-14,4.09672296086683e-14,3.58602036953926e-14,3.14193115968919e-14,2.75335310107039e-14,2.40918396343659e-14,2.1094237467878e-14,1.85407245112401e-14,1.62092561595273e-14,1.40998324127395e-14,1.24344978758018e-14,1.08801856413265e-14,9.54791801177635e-15,8.32667268468867e-15,7.32747196252603e-15,6.32827124036339e-15,5.6621374255883e-15,4.88498130835069e-15,4.32986979603811e-15,3.77475828372553e-15,3.21964677141295e-15,2.88657986402541e-15,2.55351295663786e-15,2.22044604925031e-15,1.88737914186277e-15,1.77635683940025e-15,1.4432899320127e-15,1.33226762955019e-15,1.11022302462516e-15,9.99200722162641e-16,8.88178419700125e-16,7.7715611723761e-16,6.66133814775094e-16,5.55111512312578e-16,5.55111512312578e-16,4.44089209850063e-16,3.33066907387547e-16,3.33066907387547e-16,3.33066907387547e-16,2.22044604925031e-16,2.22044604925031e-16,2.22044604925031e-16,2.22044604925031e-16,1.11022302462516e-16,1.11022302462516e-16,2.22044604925031e-16,0,1.11022302462516e-16,1.11022302462516e-16,1.11022302462516e-16,0,1.11022302462516e-16,0,0,1.11022302462516e-16,0,0,0,1.11022302462516e-16,0,0,0,0,0,0,0,1.11022302462516e-16};
+    double R0_0=1.0;
+    double R0_1=1.0;
+    double R0_2=1.0;
+    double R0_3=1.0;
+    double R0_4=1.0;
+    double R0_5=1.0;
+    double R0_T0=0.0;
+    double R0_T1=100000.0;
+    double R0_T2=100000.0;
+    double R0_T3=100000.0;
+    double R0_T4=100000.0;
+    double k=1.0;
+    double alpha=1.0;
+    double scale=1.0;
     // /* For slightly faster implementation, call parameters by index
-    double R0_0 = model_params[0];
-    double R0_1 = model_params[1];
-    double R0_T0 = model_params[2];
+    for (int i=0; i!=param_names.size(); ++i) {
+        if (param_names[i]=="R0_0") R0_0 = model_params[i];
+        if (param_names[i]=="R0_1") R0_1 = model_params[i];
+        if (param_names[i]=="R0_2") R0_2 = model_params[i];
+        if (param_names[i]=="R0_3") R0_0 = model_params[i];
+        if (param_names[i]=="R0_4") R0_0 = model_params[i];
+        if (param_names[i]=="R0_5") R0_0 = model_params[i];
+        if (param_names[i]=="R0_T0") R0_T0 = model_params[i];
+        if (param_names[i]=="R0_T1") R0_T1 = model_params[i];
+        if (param_names[i]=="R0_T2") R0_T2 = model_params[i];
+        if (param_names[i]=="R0_T3") R0_T3 = model_params[i];
+        if (param_names[i]=="R0_T4") R0_T4 = model_params[i];
+        if (param_names[i]=="k") k = model_params[i];
+        if (param_names[i]=="alpha") alpha = model_params[i];
+        if (param_names[i]=="scale") scale = model_params[i];
+    }
     double R0_now = 0.0;
-    double k = model_params[3];
-//    double rateE2I = model_params[4];
-//    double rateI2R = model_params[5];
-    double alpha = model_params[4];
-    double scale = model_params[5];
     double recoveries=0.0;
     double new_infections=0.0;
     double durI = 0.0;
+    double ran_unif_num1, ran_unif_num2;
+    if (custom_prob.size()==0) set_custom_prob(alpha, scale);
     if (start_dt < step_size) {  // Set initial number of infected
         traj->resize_recoveries(total_dt);
-        int init_inf = (int)round(model_params[6]);
+        int init_inf = (int)round(model_params[14]);
         traj->set_state(init_inf, 0);
         for (int i=0; i!=init_inf; ++i) {
-            durI = gsl_ran_gamma(rng, alpha, scale);
+//            durI = gsl_ran_gamma(rng, alpha, scale);
+            ran_unif_num1 = gsl_ran_flat(rng, 0.0000001, 1);
+            ran_unif_num2 = gsl_ran_flat(rng, 0.0000001, 1);
+            durI = -log(ran_unif_num1)*scale-log(ran_unif_num2)*scale;
             durI = (int)(durI/365.0/step_size);
             traj->add_recovery_time(durI);
         }
@@ -45,45 +86,48 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         //
         // Recoveries: I --> R
         recoveries = traj->num_recover_at(t-start_dt);
-        if (recoveries > 10000) { // If the epidemic is too large, set num_infected to 0, so that likelihood is 0.
+        if (recoveries > 100000.0) { // If the epidemic is too large, set num_infected to 0, so that likelihood is 0.
             num_infected = 0.0;
+            traj->set_traj(0.0, t-start_dt);
         }
         else if (recoveries > 0) {
             traj->set_traj(recoveries, t-start_dt);
             if (t*step_size<(R0_T0)) R0_now = R0_0;
+            else if (t*step_size<(R0_T1)) R0_now = R0_1;
+            else if (t*step_size<(R0_T2)) R0_now = R0_2;
+            else if (t*step_size<(R0_T3)) R0_now = R0_3;
+            else if (t*step_size<(R0_T4)) R0_now = R0_4;
             else {
-                R0_now = R0_1;
+                R0_now = R0_5;
             }
             new_infections = gsl_ran_negative_binomial(rng, k/(k+R0_now), k*recoveries);
-            if (new_infections > 100) {
-                double infection_counter = 0;
-                double recover_after = 0.0;
-                for (int i=0; i!=total_dt; ++i) {
-//                    double next_T = (double)(i+1)*step_size*365.0;
-//                    double curr_T = (double) i*step_size*365.0;
-                    // deterministic calculation of how many people will recover
-                    recover_after = 1;
-                    if (i < 302) recover_after = std::ceil(gamma_prob[i] * new_infections);
-//                    recover_after = std::ceil((gsl_cdf_gamma_P(next_T, alpha, scale) - gsl_cdf_gamma_P(curr_T, alpha, scale)) * new_infections);
-                    if (recover_after==0) {
-                        if (infection_counter < new_infections) recover_after++;
-                    }
-                    infection_counter += recover_after;
-                    if (infection_counter > new_infections) recover_after -= infection_counter-new_infections;
-                    traj->add_recovery_time(i+t-start_dt, (int)recover_after);
-                    if (infection_counter >= new_infections) break;
+            if (new_infections > 1000) {
+                std::vector <unsigned int> a (106, 0);
+                gsl_ran_multinomial(rng, 106, (unsigned int)new_infections, &custom_prob[0], &a[0]);
+                for (int i=0; i!=a.size(); ++i) {
+//                    durI = gsl_ran_gamma(rng, alpha, scale);
+
+//                    ran_unif_num1 = gsl_rng_uniform_pos(rng);
+//                    ran_unif_num2 = gsl_rng_uniform_pos(rng);
+//                    durI = -log(ran_unif_num1)*scale-log(ran_unif_num2)*scale;
+//                    durI = (int)(durI/365.0/step_size);
+                    
+//                    durI = durI_vec[gsl_rng_uniform_int(rng, 1000)];
+//                    traj->add_recovery_time(durI+t-start_dt);
+                    traj->add_recovery_time(i+t-start_dt, a[i]);
                 }
             }
             else if (new_infections > 0) {
                 for (int i=0; i!=new_infections; ++i) {
-                    durI = gsl_ran_gamma(rng, alpha, scale);
+                    ran_unif_num1 = gsl_rng_uniform_pos(rng);
+                    ran_unif_num2 = gsl_rng_uniform_pos(rng);
+                    durI = -log(ran_unif_num1)*scale-log(ran_unif_num2)*scale;
                     durI = (int)(durI/365.0/step_size);
                     traj->add_recovery_time(durI+t-start_dt);
                 }
             }
             num_infected += new_infections - recoveries;
         }
-        double num_infected = traj->get_state(0);
         double curr_coal_rate = 1.0/num_infected;
         // Record 1/N for coalescent rate calculation
         if (num_infected > 0.0) {
