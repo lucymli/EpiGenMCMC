@@ -233,7 +233,7 @@ void Parameter::adapt() {
     if (!stop_adapting) {
         int itr=total_params;
         while (!estimate[itr]) --itr;
-        if (accepted[itr] + rejected[itr] >= adapt_every) {
+        if ((accepted[itr] + rejected[itr]) >= adapt_every) {
             for (int i=0; i!=estimate.size(); ++i) {
                 if (estimate[i]) {
                     double curr_accept = acceptance_rate[i];
@@ -248,9 +248,9 @@ void Parameter::adapt() {
                     rejected[i] = 0.0;
                 }
             }
+            --max_adapt_times;
         }
     }
-    --max_adapt_times;
     if (max_adapt_times == 0) stop_adapt();
 }
 
