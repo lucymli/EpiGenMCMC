@@ -31,7 +31,7 @@ namespace EpiGenMCMC_MCMC {
         file << "#   " << options.particles << " particles" << std::endl;
         file << "#   Log parameters every " << options.log_every << " iterations" << std::endl;
         file << "#   Filter at most every " << options.pfilter_every << " time steps" << std::endl;
-        file << "#   Filter if ESS < " << options.pfilter_threshold*100 << "% of particles" << std::endl;
+        file << "#   Filter if ESS < " << options.pfilter_threshold*100.0 << "% of particles" << std::endl;
         file << "#   Likelihood based on ";
         if (options.which_likelihood == 0) {
             file << "both epidemiologic and genealogical data";
@@ -201,21 +201,20 @@ namespace EpiGenMCMC_MCMC {
         }
         if (options.save_traj) traj.print_to_file(0, options.traj_filename, options.pfilter_every, true);
         mcmc_log(options.log_filename, model_params, 0, loglik, model_params.get_prior_all());
+        if (options.heat_factor > 1.0) model_params.stop_adapt();
         for (int iter = 1; iter != options.iterations; ++iter) {
             correction_factor = model_params.propose(options.rng[0]);
             particles.reset_weights();
             newloglik = EpiGenPfilter::pfilter(sim_model, model_params, options, particles, temptraj, epi_data, tree_data, multitree_data);
             prior_ratio = model_params.get_prior_ratio();
             accept_with_prob = (newloglik - loglik) + prior_ratio + correction_factor;
-            if (options.heat_length > 0) {
-                if (iter <= (options.heat_length*model_params.get_total_params())) accept_with_prob += log(options.heat_factor);
+            if (options.heat_factor > 1.0) {
+                if (iter <= (options.heat_length*model_params.get_total_params_to_estim())) accept_with_prob += log(options.heat_factor);
                 else {
-                    if ((iter % model_params.get_total_params())==0) {
-                        if (options.heat_factor > 1.0) {
-                            options.heat_factor -= std::min(options.heat_factor-1.0, options.cool_rate);
-                            accept_with_prob += log(options.heat_factor);
-                        }
-                        else {
+                    if ((iter % model_params.get_total_params_to_estim())==0) {
+                        options.heat_factor -= std::min(options.heat_factor-1.0, options.cool_rate);
+                        accept_with_prob += log(options.heat_factor);
+                        if (options.heat_factor <= 1.0) {
                             model_params.start_adapt();
                         }
                     }
