@@ -18,6 +18,7 @@ class Model{
     bool use_deterministic;
     double custom_prob_alpha;
     double custom_prob_scale;
+    gsl_rng * model_rng;
 public:
     Model();
     void set_deterministic(bool);

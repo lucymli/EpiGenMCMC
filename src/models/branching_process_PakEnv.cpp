@@ -9,6 +9,14 @@
 #include <stdio.h>
 #include "../model.h"
 
+void Model::set_custom_prob(double alpha, double scale) {
+    custom_prob.resize(0);
+    double w;
+    for (int i=0; i<5000; ++i) {
+        w = gsl_ran_gamma(model_rng, alpha, scale);
+        custom_prob.push_back(w);
+    }
+}
 
 void Model::simulate(std::vector<double> & model_params, std::vector<std::string> & param_names, Trajectory * traj, int start_dt, int end_dt, double step_size, int total_dt, gsl_rng * rng) {
     if ((traj->get_state(0)+traj->get_state(1)) < 1.0) {
@@ -36,22 +44,23 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     double recoveries=0.0;
     double new_infections=0.0;
     double durI = 0.0;
-    double ran_unif_num1 = 0.1;
-    double ran_unif_num2 = 0.1;
+    if (custom_prob.size()<1000) {
+        model_rng = rng;
+        set_custom_prob(rateE2I, rateI2R);
+    }
+    int ran_num = (int)gsl_ran_flat(rng, 0, custom_prob.size());
     if (start_dt < step_size) {  // Set initial number of infected
         traj->resize_recoveries(total_dt);
         int init_inf = (int)round(model_params[17]);
         traj->set_state(init_inf, 0);
         for (int i=0; i!=init_inf; ++i) {
-            ran_unif_num1 = gsl_ran_flat(rng, 0.0000001, 1);
-            ran_unif_num2 = gsl_ran_flat(rng, 0.0000001, 1);
-            durI = -log(ran_unif_num1)/rateE2I-log(ran_unif_num2)/rateI2R;
-            //            durI = gsl_ran_exponential(rng, 1.0/rateE2I)+gsl_ran_exponential(rng, 1.0/rateI2R);
+            durI = custom_prob[ran_num];
+            ++ran_num;
+            if (ran_num == custom_prob.size()) ran_num=0;
             durI = (int)(durI/step_size);
             traj->add_recovery_time(durI);
         }
     }
-    double a = rateE2I*rateI2R/(rateI2R-rateE2I)/200.0;
     // */
     double num_infected = traj->get_state(0);
     for (int t=start_dt; t<end_dt; ++t) {
@@ -74,22 +83,11 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
             double time_of_year = ((double)t*step_size)+phase;
             Re = R0_now * (1.0 + amplitude * cos(2.0*M_PI*time_of_year));
             new_infections = gsl_ran_negative_binomial(rng, k/(k+Re), k*recoveries);
-            if (new_infections > 100) {
-                double infection_counter = 0;
-                for (int i=0; i!=total_dt; ++i) {
-                    double recover_after = std::max(1.0, round(new_infections*a*(exp(-rateE2I*(i+1.0)*step_size)-exp(-rateI2R*(i+1.0)*step_size))));
-                    infection_counter += recover_after;
-                    if (infection_counter > new_infections) recover_after -= infection_counter-new_infections;
-                    traj->add_recovery_time(i+t-start_dt, (int)recover_after);
-                    if (infection_counter >= new_infections) break;
-                }
-            }
-            else if (new_infections > 0) {
+            if (new_infections > 0) {
                 for (int i=0; i!=new_infections; ++i) {
-                    ran_unif_num1 = gsl_ran_flat(rng, 0.0000001, 1);
-                    ran_unif_num2 = gsl_ran_flat(rng, 0.0000001, 1);
-                    durI = -log(ran_unif_num1)/rateE2I - log(ran_unif_num2)/rateI2R;
-                    //                    durI = gsl_ran_exponential(rng, 1.0/rateE2I)+gsl_ran_exponential(rng, 1.0/rateI2R);
+                    durI = custom_prob[ran_num];
+                    ++ran_num;
+                    if (ran_num == custom_prob.size()) ran_num=0;
                     durI = (int)(durI/step_size);
                     traj->add_recovery_time(durI+t-start_dt);
                 }
