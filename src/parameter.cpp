@@ -270,6 +270,16 @@ double Parameter::get_transform(double value, std::string transformation, bool r
     return (newvalue);
 }
 
+double Parameter::get_lognormal_sd (double MEAN, double SD) {
+    double sigma = pow(log(1.0+SD*SD/MEAN/MEAN), 0.5);
+    return (sigma);
+}
+
+double Parameter::get_lognormal_mean (double MEAN, double SD) {
+    double zeta = log(MEAN/pow(1.0+(SD*SD/MEAN/MEAN), 0.5));
+    return (zeta);
+}
+
 double Parameter::propose(gsl_rng * rng) {
     if (!stop_adapting) adapt();
     std::string trans = transform[curr_param_to_estimate];
