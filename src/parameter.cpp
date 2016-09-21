@@ -274,19 +274,34 @@ double Parameter::propose(gsl_rng * rng) {
     if (!stop_adapting) adapt();
     std::string trans = transform[curr_param_to_estimate];
     old_param_value = parameter_values[curr_param_to_estimate];
+    std::string proposal_distribution = proposal[curr_param_to_estimate];
     double old = get_transform(old_param_value, trans, false);
-    double curr = old+gsl_ran_gaussian(rng, proposal_sd[curr_param_to_estimate]);
+    double curr;
     double lower = proposal_lower[curr_param_to_estimate];
     double upper = proposal_upper[curr_param_to_estimate];
     double sd = proposal_sd[curr_param_to_estimate];
-    while ((curr < lower) | (curr > upper)) {
+    double correction_factor, tempA, tempB, tempC, tempD;
+    if (proposal_distribution == "lognormal") {
+        double zeta = get_lognormal_mean(old, sd);
+        double sigma = get_lognormal_mean(old, sd);
+        curr = exp(zeta+sigma*gsl_ran_gaussian(rng, 1.0));
+        while ((curr < lower) | (curr > upper)) {
+            curr = exp(zeta+sigma*gsl_ran_gaussian(rng, 1.0));
+        }
+        tempA = gsl_cdf_ugaussian_P((log(upper)-log(old))/sd);
+        tempB = gsl_cdf_ugaussian_P((log(upper)-log(curr))/sd);
+        correction_factor = (curr*tempA) / (old*tempB);
+    } else {
         curr = old+gsl_ran_gaussian(rng, sd);
+        while ((curr < lower) | (curr > upper)) {
+            curr = old+gsl_ran_gaussian(rng, sd);
+        }
+        tempA = gsl_cdf_ugaussian_P((upper-old)/sd);
+        tempB = gsl_cdf_ugaussian_P((lower-old)/sd);
+        tempC = gsl_cdf_ugaussian_P((upper-curr)/sd);
+        tempD = gsl_cdf_ugaussian_P((lower-curr)/sd);
+        correction_factor = (tempA - tempB) / (tempC - tempD);
     }
-    double tempA = gsl_cdf_ugaussian_P((upper-old)/sd);
-    double tempB = gsl_cdf_ugaussian_P((lower-old)/sd);
-    double tempC = gsl_cdf_ugaussian_P((upper-curr)/sd);
-    double tempD = gsl_cdf_ugaussian_P((lower-curr)/sd);
-    double correction_factor = (tempA - tempB) / (tempC - tempD);
     curr = get_transform(curr, trans, true);
     parameter_values[curr_param_to_estimate] = curr;
     return (log(correction_factor));

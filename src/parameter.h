@@ -20,6 +20,15 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
 
+double get_lognormal_sd (double MEAN, double SD) {
+    double sigma = pow(log(1.0+SD*SD/MEAN/MEAN), 0.5);
+    return (sigma);
+}
+
+double get_lognormal_mean (double MEAN, double SD) {
+    double zeta = log(MEAN/pow(1.0+(SD*SD/MEAN/MEAN), 0.5));
+    return (zeta);
+}
 
 class Parameter {
     std::vector <double> parameter_values;
