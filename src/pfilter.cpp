@@ -113,13 +113,16 @@ namespace EpiGenPfilter {
                 }
             }
             double curr_ESS = particles.get_ESS();
+//            printf("time: %d, weight: %f\n", t, particles.get_total_weight());
             if (curr_ESS < ESS_threshold) {
                 double total_weight = particles.get_total_weight();
                 if (total_weight == 0.0) {
                     loglik = -0.1*std::numeric_limits<double>::max();
+                    std::cout << "stop time: " << t << std::endl;
                     break;
+                } else {
+                    loglik += log(total_weight) - log(num_particles);
                 }
-                loglik += log(total_weight) - log(num_particles);
                 particles.resample(options.rng[0]);
             }
             else {
