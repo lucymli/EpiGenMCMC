@@ -103,7 +103,7 @@ namespace EpiGenPfilter {
                         w *= likelihood_calc.binomial_lik(reporting_rate, A, epi_data.get_data_ptr(0), add_dt+total_dt, start_dt, end_dt, add_dt, options.num_groups, false);
                     }
                     if (options.which_likelihood != 1) {
-                        w *= likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj2_ptr(0), tree_data.get_binomial_ptr(0), tree_data.get_interval_ptr(0), tree_data.get_ends_ptr(0), start_dt, end_dt, add_dt, false);
+                        w *= likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(2, 0), particles.get_traj(i)->get_traj_ptr(3, 0), tree_data.get_binomial_ptr(0), tree_data.get_interval_ptr(0), tree_data.get_ends_ptr(0), start_dt, end_dt, add_dt, false);
                     }
                     particles.set_weight(w, i, true);
                     if (options.save_traj) {
@@ -117,8 +117,9 @@ namespace EpiGenPfilter {
             if (curr_ESS < ESS_threshold) {
                 double total_weight = particles.get_total_weight();
                 if (total_weight == 0.0) {
-                    loglik = -0.1*std::numeric_limits<double>::max();
-                    std::cout << "stop time: " << t << std::endl;
+                    loglik += -0.1*std::numeric_limits<double>::max();
+//                    std::cout << std::accumulate(epi_data.get_data_ptr(0)+start_dt, epi_data.get_data_ptr(0)+end_dt, 0.0) << " : " << particles.get_traj(0)->get_traj(0) << std::endl;
+                    std::cout << "stop time: " << end_dt << std::endl;
                     break;
                 } else {
                     loglik += log(total_weight) - log(num_particles);
@@ -131,9 +132,9 @@ namespace EpiGenPfilter {
         }
         if (options.save_traj) {
             output_traj.resize((total_dt+add_dt), num_groups);
-            if (loglik > -0.1*std::numeric_limits<double>::max()) {
+            //if (loglik > -0.1*std::numeric_limits<double>::max()) {
                 particles.retrace_traj(output_traj, options.rng[0]);
-            }
+            //}
         }
         for (int i=0; i!=num_particles; ++i) {
             particles.get_traj(i)->reset();

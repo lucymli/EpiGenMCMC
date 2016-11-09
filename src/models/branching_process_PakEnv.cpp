@@ -44,6 +44,8 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     double recoveries=0.0;
     double new_infections=0.0;
     double durI = 0.0;
+    double time_of_year = 0.0;
+    double curr_coal_rate = 0.0;
     if (custom_prob.size()<1000) {
         model_rng = rng;
         set_custom_prob(rateE2I, rateI2R);
@@ -80,7 +82,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
             else if (t < R0_T3) R0_now = R0_3;
             else if (t < R0_T4) R0_now = R0_4;
             else R0_now = R0_5;
-            double time_of_year = ((double)t*step_size)+phase;
+            time_of_year = ((double)t*step_size)+phase;
             Re = R0_now * (1.0 + amplitude * cos(2.0*M_PI*time_of_year));
             new_infections = gsl_ran_negative_binomial(rng, k/(k+Re), k*recoveries);
             if (new_infections > 0) {
@@ -95,13 +97,14 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
             //            traj->set_state(traj->get_state(0)+new_infections-recoveries, 0);
             num_infected += new_infections - recoveries;
         }
-        double curr_coal_rate = 1.0/num_infected;
         // Record 1/N for coalescent rate calculation
         if (num_infected > 0.0) {
-            traj->set_traj2(curr_coal_rate*Re/((1.0/rateI2R)+(1.0/rateE2I))*(1.0+1.0/k), t-start_dt);
+            traj->set_traj(2, num_infected, t-start_dt);
+            traj->set_traj(3, Re/((1.0/rateI2R)+(1.0/rateE2I))*(1.0+1.0/k), t-start_dt);
         }
         else {
-            traj->set_traj2(0.0, t-start_dt);
+            traj->set_traj(2, 0.0, t-start_dt);
+            traj->set_traj(3, 0.0, t-start_dt);
             break;
         }
     }

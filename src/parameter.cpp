@@ -242,7 +242,7 @@ void Parameter::adapt() {
                         curr_accept = std::min(0.99, curr_accept);
 //                        proposal_sd[i] *= qnorm(optimal_acceptance/2.0, 0.0, 1.0, 1, 0) / qnorm(curr_accept/2.0, 0.0, 1.0, 1, 0);
                         proposal_sd[i] *= exp(0.999/2.0*(curr_accept-optimal_acceptance));
-                        proposal_sd[i] = std::max(proposal_sd[i], 0.0001);
+                        proposal_sd[i] = std::max(proposal_sd[i], 0.000001);
                     }
                     accepted[i] = 0.0;
                     rejected[i] = 0.0;
@@ -270,12 +270,12 @@ double Parameter::get_transform(double value, std::string transformation, bool r
     return (newvalue);
 }
 
-double Parameter::get_lognormal_sd (double MEAN, double SD) {
+double Parameter::get_lognormal_sd (double MEAN, double SD) const {
     double sigma = pow(log(1.0+SD*SD/MEAN/MEAN), 0.5);
     return (sigma);
 }
 
-double Parameter::get_lognormal_mean (double MEAN, double SD) {
+double Parameter::get_lognormal_mean (double MEAN, double SD) const {
     double zeta = log(MEAN/pow(1.0+(SD*SD/MEAN/MEAN), 0.5));
     return (zeta);
 }
@@ -330,6 +330,11 @@ double Parameter::get_prior(double original_value, int index) const {
     }
     else if (prior[index]=="beta") {
         return(gsl_ran_beta_pdf(value, prior_par_1[index], prior_par_2[index]));
+    }
+    else if (prior[index]=="lognormal") {
+        double m = get_lognormal_mean(prior_par_1[index], prior_par_2[index]);
+        double s = get_lognormal_sd(prior_par_1[index], prior_par_2[index]);
+        return (gsl_ran_lognormal_pdf(value, m, s));
     }
     return (0.0);
 }

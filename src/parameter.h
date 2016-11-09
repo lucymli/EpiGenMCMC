@@ -79,8 +79,8 @@ public:
     double get_prior_all() const;
     bool param_exists(std::string) const;
     void transform_param(int, bool);
-    double get_lognormal_sd (double, double);
-    double get_lognormal_mean (double, double);
+    double get_lognormal_sd (double, double) const;
+    double get_lognormal_mean (double, double) const;
 };
 
 

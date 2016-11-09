@@ -16,6 +16,8 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     double k=model_params[1];
     double rateE2I=model_params[2];
     double rateI2R=model_params[3];
+    double R0_reduce=model_params[6];
+    int change_T=model_params[7]/step_size;
     double Rt = Beta/rateI2R*traj->get_state(0);
     double total_infectious=0.0;
     double new_infections=0.0;
@@ -28,6 +30,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     double currS;
     double latent;
     double infectious;
+    double Tg = 1.0/rateE2I + 1.0/rateI2R;
     // */
     for (int t=start_dt; t<end_dt; ++t) {
         double sub_t_I2R = 0.0;
@@ -51,26 +54,34 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
             // Becoming infectious: E --> I
             if (latent > 0) {
                 if (p1 >= 1.0) E2I = latent;
+                else if (use_deterministic) {
+                    E2I = latent * p1;
+                }
                 else {
                     E2I = gsl_ran_binomial(rng, p1, latent); // Becoming infectious
                 }
             }
             traj->set_state(infectious-I2R+E2I, 2); // Infectious
-            // Infections: S --> E
-            if (I2R > 0.0) {
-                total_infectious += I2R;
-                sub_t_I2R += I2R;
-//                traj->set_traj(I2R, t-start_dt); // People are sampled, i.e. appear in the time-series at the time of recovery
-                if (currS > 0) {
-                    // Current reproductive number
-                    Rt = Beta / rateI2R * currS;
-                    // Draw from the negative binomial distribution (gamma-poisson mixture) to determine
-                    // number of secondary infections
-                    S2E = gsl_ran_negative_binomial(rng, k/(k+Rt), k*I2R);  // New infections
-                    if (S2E > 0) {
-                        S2E = std::min(currS, S2E);
-                        new_infections += S2E;
-                        traj->set_state(currS-S2E, 0); // Susceptible
+            if (use_deterministic) {
+                S2E = Beta * currS * step_size * infectious;
+            } else {
+                // Infections: S --> E
+                if (I2R > 0.0) {
+                    total_infectious += I2R;
+                    sub_t_I2R += I2R;
+                    //                traj->set_traj(I2R, t-start_dt); // People are sampled, i.e. appear in the time-series at the time of recovery
+                    if (currS > 0) {
+                        // Current reproductive number
+                        Rt = Beta / rateI2R * currS;
+                        if (change_T>=t) Rt *= R0_reduce;
+                        // Draw from the negative binomial distribution (gamma-poisson mixture) to determine
+                        // number of secondary infections
+                        S2E = gsl_ran_negative_binomial(rng, k/(k+Rt), k*I2R);  // New infections
+                        if (S2E > 0) {
+                            S2E = std::min(currS, S2E);
+                            new_infections += S2E;
+                            traj->set_state(currS-S2E, 0); // Susceptible
+                        }
                     }
                 }
             }
@@ -79,32 +90,17 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
             E2I=0.0;
             I2R=0.0;
         }
-        traj->set_traj(sub_t_I2R, t-start_dt);
+        traj->set_traj(1, sub_t_I2R, t-start_dt);
         double N = traj->get_state(1)+traj->get_state(2);
         // Record 1/N for coalescent rate calculation
         if (N > 0.0) {
-            traj->set_traj2(1.0/N, t-start_dt);
+            traj->set_traj(2, N, t-start_dt);
+            traj->set_traj(3, Rt/Tg*(1.0+1.0/k), t-start_dt);
         }
         else {
-            traj->set_traj2(0.0, t-start_dt);
+            traj->set_traj(2, 0.0, t-start_dt);
+            traj->set_traj(3, 0.0, t-start_dt);
             break;
         }
-    }
-    // Empirical reproductive number
-//    if (new_infections > 0.0) {
-//        Rt = new_infections/total_infectious;
-//    }
-    Rt = Beta / rateI2R * traj->get_state(0);
-    // Calculate coalescent rate as 1/I(t) / Tg * Rt * (1 + 1/k)
-    double Tg = 1.0/rateE2I + 1.0/rateI2R;
-    double coal_rate = 0.0;
-    for (int t=start_dt; t<end_dt; ++t) {
-        coal_rate = traj->get_traj2(t-start_dt)*Rt/Tg*(1.0+1.0/k);
-        if (coal_rate == 0.0) {
-            double A = Rt;
-            double C = coal_rate;
-            double B = Tg;
-        }
-        traj->set_traj2(coal_rate, t-start_dt);
     }
 }

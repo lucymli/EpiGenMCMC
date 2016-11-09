@@ -46,6 +46,14 @@ double Likelihood::binomial_lik(double reporting_rate, double process, std::vect
             if (return_log) return(0.0);
             return(1.0);
         }
+//        if (total_data < 1.0) {
+//            if (return_log) return(0.0);
+//            return(1.0);
+//        }
+//        double total_diff = abs(total_incidence-total_data/reporting_rate);
+//        if (total_diff > (total_data/reporting_rate)) total_diff = total_data/reporting_rate;
+//        if (return_log) return (log(1.0-total_diff/(total_data/reporting_rate)));
+//        else return (1.0-total_diff/(total_data/reporting_rate));
         if (total_data > total_incidence) {
             if (return_log) return(-std::numeric_limits<double>::max());
             return(0.0);
@@ -61,11 +69,16 @@ double Likelihood::binomial_lik(double reporting_rate, double process, std::vect
     return(exp(loglik));
 }
 
-double Likelihood::coalescent_lik(std::vector<double>::iterator sim_coal_rate, std::vector<double>::iterator binomial, std::vector<double>::iterator intervals, std::vector<double>::iterator indices, int start, int end, int shift, bool return_log) {
+double Likelihood::coalescent_lik(std::vector<double>::iterator sim_prev, std::vector<double>::iterator sim_coal_rate,
+                                  std::vector<double>::iterator binomial, std::vector<double>::iterator intervals,
+                                  std::vector<double>::iterator indices, int start, int end, int shift, bool return_log) {
     double weight = 0.0;
     for (int deltaT=start; deltaT!=end; ++deltaT) {
         // Loop over each simulation time step
-        double coal_rate = *(sim_coal_rate+deltaT-start);
+        double NtoNe = *(sim_coal_rate+deltaT-start+(end-start));
+        double prev = *(sim_prev+deltaT-start+(end-start));
+        double coal_rate = NtoNe/prev;
+//        double N = *(sim_coal_rate+deltaT-start);
         int first_index;
         if ((deltaT)==0) first_index = 0;
         else first_index = *(indices+deltaT-1)+1;
@@ -73,12 +86,16 @@ double Likelihood::coalescent_lik(std::vector<double>::iterator sim_coal_rate, s
         for (int event=first_index; event<=last_index; ++event) {
             // Loop over event during a simulation time step (either coalescence or sampling)
             double binom_coeff = *(binomial+event);
+            if ((prev*(prev-1.0)/2.0) < binom_coeff) {
+                if (return_log) return(-std::numeric_limits<double>::max());
+                return (0.0);
+            }
             if (binom_coeff > 0) {
                 double coal_rate_population = binom_coeff*coal_rate;
                 double time_to_next_event = *(intervals+event);
                 if (time_to_next_event < 0.0) {
                     // Coalescent ended interval
-                    if (coal_rate == 0.0) {
+                    if (coal_rate == 0.0){//|((N*(N-1.0)/2.0)<binom_coeff)) {
                         // If epidemic has died out before the most recent tip
                         if (return_log) return(-std::numeric_limits<double>::max());
                         return (0.0);

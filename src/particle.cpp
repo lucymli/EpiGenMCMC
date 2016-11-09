@@ -34,6 +34,8 @@ Particle::Particle(int input_num_particles, Trajectory init_traj) {
 void Particle::start_particle_tracing(int input_num_time_steps, int input_num_groups) {
     num_groups = input_num_groups;
     num_time_steps = input_num_time_steps;
+    overall_traj.clear();
+    particle_ancestry.clear();
     overall_traj.resize(num_time_steps*num_groups*num_particles, 0.0);
     particle_ancestry.resize(num_time_steps*num_groups*num_particles, 0);
 }
@@ -79,6 +81,7 @@ void Particle::save_ancestry(int particle_i, int start_dt, int end_dt) {
         }
     }
 }
+
 
 void Particle::reset_parents() {
     for (int i=0; i!=parents.size(); ++i) {

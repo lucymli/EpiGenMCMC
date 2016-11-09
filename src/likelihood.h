@@ -20,7 +20,7 @@ public:
     Likelihood();
     double binomial_lik(double, double, int, int, int, int, bool);
     double binomial_lik(double, double, std::vector<double>::iterator, int, int, int, int, int, bool);
-    double coalescent_lik(std::vector<double>::iterator, std::vector<double>::iterator, std::vector<double>::iterator, std::vector<double>::iterator, int, int, int, bool);
+    double coalescent_lik(std::vector<double>::iterator, std::vector<double>::iterator, std::vector<double>::iterator, std::vector<double>::iterator, std::vector<double>::iterator, int, int, int, bool);
 };
 
 #endif /* defined(__EpiGenMCMC__likelihood__) */

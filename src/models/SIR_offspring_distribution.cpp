@@ -62,7 +62,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         if (I2R > 0.0) {
             total_infectious += I2R;
             traj->set_state(traj->get_state(2)+I2R, 2); //Recovered
-            traj->set_traj(I2R, t-start_dt); // People are sampled, i.e. appear in the time-series at the time of recovery
+            traj->set_traj(1, I2R, t-start_dt); // People are sampled, i.e. appear in the time-series at the time of recovery
             double currS = traj->get_state(0);
             if (currS > 0) {
                 if (use_deterministic) {
@@ -86,7 +86,8 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         double num_infected = traj->get_state(1);
         // Record 1/N for coalescent rate calculation
         if (num_infected > 0.0) {
-            traj->set_traj2(1.0/num_infected, t-start_dt);
+            traj->set_traj(2, num_infected, t-start_dt);
+            traj->set_traj(3, S2I/I2R/Tg*(1.0+1.0/k), t-start_dt);
         }
         else {
             traj->set_traj2(0.0, t-start_dt);
@@ -94,14 +95,5 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         }
         S2I=0.0;
         I2R=0.0;
-    }
-    // Empirical reproductive number
-    if (new_infections > 0.0) {
-        Rt = new_infections/total_infectious;
-    }
-    // Calculate coalescent rate as 1/I(t) / Tg * Rt * (1 + 1/k)
-    for (int t=start_dt; t<end_dt; ++t) {
-        double coal_rate = traj->get_traj2(t-start_dt)*Rt*rateI2R*(1.0+1.0/k);
-        traj->set_traj2(coal_rate, t-start_dt);
     }
 }

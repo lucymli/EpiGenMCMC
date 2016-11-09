@@ -31,6 +31,7 @@ void Trajectory::initialise_file (std::string filename, int every) {
 Trajectory::Trajectory() {
     trajectory.resize(1);
     trajectory2.resize(1);
+    trajectory3.resize(1);
     initial_states.resize(1);
     recoveries.resize(1);
     states.resize(1);
@@ -49,9 +50,11 @@ void Trajectory::resize(int length) {
     if (trajectory.size() != length) {
         trajectory.resize(length);
         trajectory2.resize(length);
+        trajectory3.resize(length);
     }
     fill(trajectory.begin(), trajectory.end(), 0.0);
     fill(trajectory2.begin(), trajectory2.end(), 0.0);
+    fill(trajectory3.begin(), trajectory3.end(), 0.0);
 //    num_time_steps = length;
 }
 
@@ -59,9 +62,11 @@ void Trajectory::resize(int length, int groups) {
     if (trajectory.size() != length*groups) {
         trajectory.resize(length*groups);
         trajectory2.resize(length);
+        trajectory3.resize(length);
     }
     fill(trajectory.begin(), trajectory.end(), 0.0);
     fill(trajectory2.begin(), trajectory2.end(), 0.0);
+    fill(trajectory3.begin(), trajectory3.end(), 0.0);
     //    num_time_steps = length;
 }
 
@@ -158,35 +163,39 @@ void Trajectory::initialise_states(std::vector<double>input_vector) {
 }
 
 
-void Trajectory::set_traj(double value, int time) {
-    trajectory[time] = value;
+void Trajectory::set_traj(int i, double value, int time) {
+    if (i==0) trajectory[time] = value;
+    else if (i==1) trajectory2[time] = value;
+    else trajectory3[time] = value;
 }
 
-void Trajectory::set_traj(double value, int time, int group) {
+void Trajectory::set_traj(int i, double value, int time, int group) {
     trajectory[group*num_time_steps+time] = value;
 }
 
-void Trajectory::set_traj2(double value, int time) {
-    trajectory2[time] = value;
-}
+//void Trajectory::set_traj2(double value, int time) {
+//    trajectory2[time] = value;
+//}
 
 void Trajectory::set_state(double value, int time) {
     states[time] = value;
 }
 
-double Trajectory::get_traj(int time_index) const {
-    return(trajectory[time_index]);
+double Trajectory::get_traj(int i, int time_index) const {
+    if (i==0) return(trajectory[time_index]);
+    else if (i==1) return (trajectory2[time_index]);
+    else return (trajectory2[time_index]);
 }
 
-double Trajectory::get_traj(int time_index, int group_id) const {
+double Trajectory::get_traj(int i, int time_index, int group_id) const {
     int index = num_time_steps*group_id+time_index;
-    return(trajectory[index]);
+    return (get_traj(i, index));
 }
 
-
-double Trajectory::get_traj2(int time_index) const {
-    return(trajectory2[time_index]);
-}
+//
+//double Trajectory::get_traj2(int time_index) const {
+//    return(trajectory2[time_index]);
+//}
 
 void Trajectory::resize_recoveries(int total_times) {
     recoveries.resize(total_times);
@@ -228,12 +237,14 @@ void Trajectory::delete_recoveries_before(int time_to_find) {
 }
 
 
-std::vector <double> Trajectory::get_traj_range(int start, int end) const {
+std::vector <double> Trajectory::get_traj_range(int id, int start, int end) const {
     std::vector <double> output;
     if (num_groups > 1) {
         for (int group=0; group!=num_groups; ++group) {
             for (int i=start; i!=end; ++i) {
-                output.push_back(trajectory[group*num_time_steps+i]);
+                if (id==0) output.push_back(trajectory[group*num_time_steps+i]);
+                else if (id==1) output.push_back(trajectory2[group*num_time_steps+i]);
+                else output.push_back(trajectory3[group*num_time_steps+i]);
             }
         }
     }
@@ -245,29 +256,33 @@ std::vector <double> Trajectory::get_traj_range(int start, int end) const {
     return(output);
 }
 
-std::vector <double> Trajectory::get_traj_range(int start, int end, int group_id) const {
+std::vector <double> Trajectory::get_traj_range(int id, int start, int end, int group_id) const {
     std::vector <double> output;
     for (int i=start; i!=end; ++i) {
-        output.push_back(trajectory[group_id*num_time_steps+i]);
+        if (id==0) output.push_back(trajectory[group_id*num_time_steps+i]);
+        else if (id==1) output.push_back(trajectory2[group_id*num_time_steps+i]);
+        else output.push_back(trajectory3[group_id*num_time_steps+i]);
     }
     return(output);
 }
 
-std::vector <double> Trajectory::get_traj2_range(int start, int end) const {
-    std::vector <double> output;
-    for (int i=start; i!=end; ++i) {
-        output.push_back(trajectory2[i]);
-    }
-    return(output);
+//std::vector <double> Trajectory::get_traj2_range(int start, int end) const {
+//    std::vector <double> output;
+//    for (int i=start; i!=end; ++i) {
+//        output.push_back(trajectory2[i]);
+//    }
+//    return(output);
+//}
+
+std::vector<double>::iterator Trajectory::get_traj_ptr(int i, int index) {
+    if (i==0) return(trajectory.begin()+index);
+    else if (i==1) return(trajectory2.begin()+index);
+    else return(trajectory3.begin()+index);
 }
 
-std::vector<double>::iterator Trajectory::get_traj_ptr(int index) {
-    return(trajectory.begin()+index);
-}
-
-std::vector<double>::iterator Trajectory::get_traj2_ptr(int index) {
-    return(trajectory2.begin()+index);
-}
+//std::vector<double>::iterator Trajectory::get_traj2_ptr(int index) {
+//    return(trajectory2.begin()+index);
+//}
 
 double Trajectory::get_total_traj() const {
     double total_data = std::accumulate(trajectory.begin(), trajectory.end(), 0.0);
@@ -307,10 +322,13 @@ void Trajectory::replace(Trajectory * new_traj) {
     initial_states.clear();
     initial_states.insert(initial_states.begin(), new_traj->initial_states.begin(), new_traj->initial_states.end());
     for (int i=0; i!=trajectory.size(); ++i) {
-        trajectory[i] = new_traj->get_traj(i);
+        trajectory[i] = new_traj->get_traj(1, i);
     }
     for (int i=0; i!=trajectory2.size(); ++i) {
-        trajectory2[i] = new_traj->get_traj2(i);
+        trajectory2[i] = new_traj->get_traj(2, i);
+    }
+    for (int i=0; i!=trajectory2.size(); ++i) {
+        trajectory3[i] = new_traj->get_traj(3, i);
     }
     for (int i=0; i!=recoveries.size(); ++i) {
         recoveries[i] = new_traj->recoveries[i];
