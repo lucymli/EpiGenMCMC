@@ -21,7 +21,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     double Rt = Beta/rateI2R*traj->get_state(0);
     double total_infectious=0.0;
     double new_infections=0.0;
-    double divisions = 10.0;
+    double divisions = 3.0;
     double p1 = rateE2I*step_size/divisions;
     double p2 = rateI2R*step_size/divisions;
     double S2E = 0.0;
@@ -90,16 +90,16 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
             E2I=0.0;
             I2R=0.0;
         }
-        traj->set_traj(1, sub_t_I2R, t-start_dt);
+        traj->set_traj(0, sub_t_I2R, t-start_dt);
         double N = traj->get_state(1)+traj->get_state(2);
         // Record 1/N for coalescent rate calculation
         if (N > 0.0) {
-            traj->set_traj(2, N, t-start_dt);
-            traj->set_traj(3, Rt/Tg*(1.0+1.0/k), t-start_dt);
+            traj->set_traj(1, N, t-start_dt);
+            traj->set_traj(2, Rt/Tg*(1.0+1.0/k), t-start_dt);
         }
         else {
+            traj->set_traj(1, 0.0, t-start_dt);
             traj->set_traj(2, 0.0, t-start_dt);
-            traj->set_traj(3, 0.0, t-start_dt);
             break;
         }
     }

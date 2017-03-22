@@ -75,10 +75,10 @@ double Likelihood::coalescent_lik(std::vector<double>::iterator sim_prev, std::v
     double weight = 0.0;
     for (int deltaT=start; deltaT!=end; ++deltaT) {
         // Loop over each simulation time step
-        double NtoNe = *(sim_coal_rate+deltaT-start+(end-start));
-        double prev = *(sim_prev+deltaT-start+(end-start));
+        double NtoNe = *(sim_coal_rate+deltaT-start);
+        double prev = *(sim_prev+deltaT-start);
         double coal_rate = NtoNe/prev;
-//        double N = *(sim_coal_rate+deltaT-start);
+        if (prev<1.0) coal_rate = 0.0;
         int first_index;
         if ((deltaT)==0) first_index = 0;
         else first_index = *(indices+deltaT-1)+1;
@@ -86,16 +86,16 @@ double Likelihood::coalescent_lik(std::vector<double>::iterator sim_prev, std::v
         for (int event=first_index; event<=last_index; ++event) {
             // Loop over event during a simulation time step (either coalescence or sampling)
             double binom_coeff = *(binomial+event);
-            if ((prev*(prev-1.0)/2.0) < binom_coeff) {
-                if (return_log) return(-std::numeric_limits<double>::max());
-                return (0.0);
-            }
             if (binom_coeff > 0) {
+                if ((prev <= 1.0) | ((prev*(prev-1.0)/2.0) < binom_coeff)) {
+                    if (return_log) return(-std::numeric_limits<double>::max());
+                    return (0.0);
+                }
                 double coal_rate_population = binom_coeff*coal_rate;
                 double time_to_next_event = *(intervals+event);
                 if (time_to_next_event < 0.0) {
                     // Coalescent ended interval
-                    if (coal_rate == 0.0){//|((N*(N-1.0)/2.0)<binom_coeff)) {
+                    if (coal_rate == 0.0){
                         // If epidemic has died out before the most recent tip
                         if (return_log) return(-std::numeric_limits<double>::max());
                         return (0.0);

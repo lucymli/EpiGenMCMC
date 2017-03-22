@@ -45,7 +45,7 @@ void Particle::save_traj_to_matrix(int start_dt, int end_dt) {
         for (int timei=start_dt; timei!=end_dt; ++timei) {
             for (int group_id=0; group_id!=num_groups; ++group_id) {
                 int index = num_time_steps*num_groups*particlei+num_time_steps*group_id+timei;
-                double value = trajectories[particlei]->get_traj(timei-start_dt, group_id);
+                double value = trajectories[particlei]->get_traj(0, timei-start_dt, group_id);
                 overall_traj[index] = value;
             }
         }
@@ -56,7 +56,7 @@ void Particle::save_traj_to_matrix(int particle_id, int start_dt, int end_dt) {
     for (int timei=start_dt; timei!=end_dt; ++timei) {
         for (int group_id=0; group_id!=num_groups; ++group_id) {
             int index = num_time_steps*num_groups*particle_id+num_time_steps*group_id+timei;
-            double value = trajectories[particle_id]->get_traj(timei-start_dt, group_id);
+            double value = trajectories[particle_id]->get_traj(0, timei-start_dt, group_id);
             overall_traj[index] = value;
         }
     }
@@ -104,14 +104,14 @@ void Particle::retrace_traj(Trajectory& output_traj, gsl_rng * rng) {
     for (groupi=num_groups-1; groupi>=0; --groupi) {
         index = total_steps*a+num_time_steps*groupi+timei; // Position on the overall_traj
         traj_size = overall_traj[index]; // Epidemic size for particle a at time timei
-        output_traj.set_traj(traj_size, timei, groupi);
+        output_traj.set_traj(0, traj_size, timei, groupi);
     }
     a = particle_ancestry[index];
     for (timei=num_time_steps-2; timei>=0; --timei) {
         for (groupi=num_groups-1; groupi>=0; --groupi) {
             index = total_steps*a+num_time_steps*groupi+timei; // Position on the overall_traj
             traj_size = overall_traj[index];
-            output_traj.set_traj(traj_size, timei, groupi);
+            output_traj.set_traj(0, traj_size, timei, groupi);
         }
         a = particle_ancestry[index];
     }

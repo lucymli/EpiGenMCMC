@@ -40,8 +40,10 @@ Trajectory::Trajectory() {
 Trajectory::Trajectory(int numT, int numGroups) {
     num_time_steps = numT;
     num_groups = numGroups;
-//    trajectory.resize(numT*numGroups);
-//    trajectory2.resize(numT);
+    trajectory.resize(numT*numGroups);
+    trajectory2.resize(numT);
+    trajectory3.resize(numT);
+    recoveries.resize(numT);
 //    initialise_file(filename);
 }
 

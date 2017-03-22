@@ -88,6 +88,7 @@ namespace EpiGenPfilter {
         int start_dt;
         int end_dt;
         for (t=0; t!=total_steps; ++t) {
+//            std::vector<double> we(options.particles, 0.0), wg(options.particles, 0.0);
             start_dt = t*options.pfilter_every;
             end_dt = std::min(total_dt, (t+1)*options.pfilter_every);
             omp_set_num_threads(options.num_threads);
@@ -98,12 +99,19 @@ namespace EpiGenPfilter {
                     particles.get_traj(i)->resize(end_dt-start_dt, options.num_groups);
                     models[tn].simulate(values[tn], param_names, particles.get_traj(i), start_dt, end_dt, sim_dt, total_dt, options.rng[tn]);
                     double w = 1.0;
+                    double temp = 0.0;
                     if (options.which_likelihood<2) {
                         double A = particles.get_traj(i)->get_total_traj();
-                        w *= likelihood_calc.binomial_lik(reporting_rate, A, epi_data.get_data_ptr(0), add_dt+total_dt, start_dt, end_dt, add_dt, options.num_groups, false);
+                        temp = likelihood_calc.binomial_lik(reporting_rate, A, epi_data.get_data_ptr(0), add_dt+total_dt, start_dt, end_dt, add_dt, options.num_groups, false);
+                        w *= temp;
+//                        we[i] = log(temp);
                     }
                     if (options.which_likelihood != 1) {
-                        w *= likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(2, 0), particles.get_traj(i)->get_traj_ptr(3, 0), tree_data.get_binomial_ptr(0), tree_data.get_interval_ptr(0), tree_data.get_ends_ptr(0), start_dt, end_dt, add_dt, false);
+                        temp = likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(1, 0), particles.get_traj(i)->get_traj_ptr(2, 0),
+                                                            tree_data.get_binomial_ptr(0), tree_data.get_interval_ptr(0), tree_data.get_ends_ptr(0),
+                                                            start_dt, end_dt, add_dt, false);
+                        w *= temp;
+//                        wg[i] = log(temp);
                     }
                     particles.set_weight(w, i, true);
                     if (options.save_traj) {
@@ -112,8 +120,8 @@ namespace EpiGenPfilter {
                     }
                 }
             }
+//            std::cout << "Epi Weight: " << std::accumulate(we.begin(), we.end(), 0.0) << " Gen Weight: " << std::accumulate(wg.begin(), wg.end(), 0.0) << " Total: " << particles.get_total_weight() << std::endl;
             double curr_ESS = particles.get_ESS();
-//            printf("time: %d, weight: %f\n", t, particles.get_total_weight());
             if (curr_ESS < ESS_threshold) {
                 double total_weight = particles.get_total_weight();
                 if (total_weight == 0.0) {
@@ -139,7 +147,7 @@ namespace EpiGenPfilter {
         for (int i=0; i!=num_particles; ++i) {
             particles.get_traj(i)->reset();
         }
-        std::vector < std::vector<double>>().swap(values);
+        std::vector < std::vector<double> >().swap(values);
         return (loglik);
     }
 }
