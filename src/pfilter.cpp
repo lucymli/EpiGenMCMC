@@ -96,6 +96,7 @@ namespace EpiGenPfilter {
             for (int tn=0; tn<options.num_threads; tn++) {
                 for (int i=tn; i<num_particles; i+=options.num_threads) {
                     // Adjust length of trajectory
+//                    if (tn==0) std::cout << i << ' ' << std::endl;
                     particles.get_traj(i)->resize(end_dt-start_dt, options.num_groups);
                     models[tn].simulate(values[tn], param_names, particles.get_traj(i), start_dt, end_dt, sim_dt, total_dt, options.rng[tn]);
                     double w = 1.0;
