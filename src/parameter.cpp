@@ -406,7 +406,7 @@ MCMCoptions::MCMCoptions(std::string filename) {
     verbose = true;
     save_traj = true;
     use_lhs = false;
-    num_threads = 4;//omp_get_max_threads();
+    num_threads = omp_get_num_threads();
     num_groups = 1;
     heat_factor = 1.0;
     heat_length = 0;
