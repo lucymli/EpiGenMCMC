@@ -86,11 +86,12 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         double num_infected = traj->get_state(1);
         // Record 1/N for coalescent rate calculation
         if (num_infected > 0.0) {
+            double Tg = 1.0/I2R;
             traj->set_traj(1, num_infected, t-start_dt);
             traj->set_traj(2, S2I/I2R/Tg*(1.0+1.0/k), t-start_dt);
         }
         else {
-            traj->set_traj2(0.0, t-start_dt);
+            traj->set_traj(2, 0.0, t-start_dt);
             break;
         }
         S2I=0.0;
