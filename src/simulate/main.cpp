@@ -8,7 +8,7 @@
 
 #include <omp.h>
 #include <iostream>
-#include "model.h"
+#include "../model.h"
 
 // Argument order:
 //   1. Parameters
@@ -59,15 +59,20 @@ int main(int argc, const char * argv[]) {
         for (int i=0; i<replicates; ++i) {
             trajectories.push_back(new Trajectory(init_traj));
         }
+        std::vector <std::vector<double> > values_threads (num_threads, values);
+        std::vector <std::vector<std::string> > param_names_threads (num_threads, param_names);
+        std::vector <int> total_dt_threads (num_threads, total_dt);
+        std::vector <double> dt_size_threads (num_threads, dt_size);
+        std::vector <int> seed_num_threads (num_threads, seed_num);
 #pragma omp parallel for schedule(static,1)
-        for (int tn=0; tn<num_threads; ++tn) {
+        for (int tn=0; tn<num_threads; tn++) {
             Model sim_model_tn;
-            for (int i=tn; i<replicates; ++i) {
-                sim_model_tn.simulate(values, param_names, trajectories[i], 0, total_dt, dt_size, seed_num+i, rng[tn]);
-                std::cout << i << "\t";
+            for (int i=tn; i<replicates; i+=num_threads) {
+                sim_model_tn.simulate(values_threads[tn], param_names_threads[tn], trajectories[i], 0, total_dt_threads[tn], dt_size_threads[tn], seed_num_threads[tn]+i, rng[tn]);
+                if (tn==0) std::cout << i << " " << std::endl;
             }
         }
-        for (int i=0; i<replicates; ++i) {
+        for (int i=0; i<replicates; i++) {
             trajectories[i]->print_to_file(i, traj_output, sum_every, true);
         }
     }
