@@ -21,7 +21,10 @@ void Trajectory::initialise_file (std::string filename, int every) {
     }
     else {
         for (int t=0; t<num_time_steps; t+=every) {
-            file << "\tT" << t;
+            file << "\tIncT" << t;
+        }
+        for (int t=0; t<num_time_steps; t+=every) {
+            file << "\tPrevT" << t;
         }
     }
     file << std::endl;
@@ -105,6 +108,19 @@ void Trajectory::print_to_file(int iteration, std::string filename, int every, b
             }
             file << "\t" << count;
         }
+        for (int t=0; t<total_steps; t+=every) {
+            double count = 0.0;
+            if (sum_across) {
+                for (int j=0; j<std::min(every, total_steps-t); ++j) {
+                    count += trajectory2[t+j];
+                }
+                count /= (double) std::min(every, total_steps-t);
+            }
+            else {
+                count = trajectory2[t];
+            }
+            file << "\t" << (int)count;
+        }
     }
     file << std::endl;
     file.close();
@@ -141,6 +157,19 @@ void Trajectory::print_to_file(std::string filename, int every, bool sum_across)
                 count = trajectory[t];
             }
             file << "\t" << count;
+        }
+        for (int t=0; t<total_steps; t+=every) {
+            double count = 0.0;
+            if (sum_across) {
+                for (int j=0; j<std::min(every, num_time_steps-t); ++j) {
+                    count += trajectory2[t+j];
+                }
+                count /= (double) std::min(every, num_time_steps-t);
+            }
+            else {
+                count = trajectory2[t];
+            }
+            file << "\t" << (int)count;
         }
     }
     file << std::endl;
@@ -186,7 +215,7 @@ void Trajectory::set_state(double value, int time) {
 double Trajectory::get_traj(int i, int time_index) const {
     if (i==0) return(trajectory[time_index]);
     else if (i==1) return (trajectory2[time_index]);
-    else return (trajectory2[time_index]);
+    else return (trajectory3[time_index]);
 }
 
 double Trajectory::get_traj(int i, int time_index, int group_id) const {
