@@ -119,7 +119,7 @@ void Trajectory::print_to_file(int iteration, std::string filename, int every, b
             else {
                 count = trajectory2[t];
             }
-            file << "\t" << (int)count;
+            file << "\t" << std::round(count);
         }
     }
     file << std::endl;
@@ -169,7 +169,7 @@ void Trajectory::print_to_file(std::string filename, int every, bool sum_across)
             else {
                 count = trajectory2[t];
             }
-            file << "\t" << (int)count;
+            file << "\t" << std::round(count);
         }
     }
     file << std::endl;
