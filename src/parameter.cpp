@@ -121,7 +121,7 @@ Parameter::Parameter(std::string filename) {
         }
         ++i;
     }
-    curr_param_to_estimate = params_to_estim.front();
+    if (params_to_estim.size() > 0) curr_param_to_estimate = params_to_estim.front();
     file.close();
 }
 
