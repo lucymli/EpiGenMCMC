@@ -111,10 +111,10 @@ void Trajectory::print_to_file(int iteration, std::string filename, int every, b
         for (int t=0; t<total_steps; t+=every) {
             double count = 0.0;
             if (sum_across) {
-                for (int j=0; j<std::min(every, total_steps-t); ++j) {
+                for (int j=0; j<std::min(every, num_time_steps-t); ++j) {
                     count += trajectory2[t+j];
                 }
-                count /= (double) std::min(every, total_steps-t);
+                count /= (double) std::min(every, num_time_steps-t);
             }
             else {
                 count = trajectory2[t];
