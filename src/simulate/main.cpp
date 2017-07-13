@@ -56,9 +56,9 @@ int main(int argc, const char * argv[]) {
     const gsl_rng_type * rng_t = gsl_rng_rand;
     gsl_rng **rng;
     rng = (gsl_rng **) malloc(num_threads * sizeof(gsl_rng *));
-    for (int i = 0; i != num_threads; ++i) {
-        rng[i] = gsl_rng_alloc(rng_t);
-        gsl_rng_set(rng[i], seed_num+i);
+    for (int tn = 0; tn!= num_threads; tn++) {
+        rng[tn] = gsl_rng_alloc(rng_t);
+        gsl_rng_set(rng[tn], seed_num+tn*replicates);
     }
     // A single simulation
     if (replicates==1) {
