@@ -76,9 +76,11 @@ namespace EpiGenPfilter {
 #pragma omp parallel for shared(particles, values)
                 for (int i=0; i<num_particles; i++) {
                     int tn = omp_get_thread_num();
+                    gsl_rng* r = gsl_rng_alloc( gsl_rng_mt19937 );
+                    gsl_rng_set( r, omp_get_thread_num() + i );
                     // Adjust length of trajectory
                     particles.get_traj(i)->resize(add_dt, num_groups);
-                    models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), 0, add_dt_threads[tn], dt_threads[tn], total_dt_threads[tn], options.rng[tn]);
+                    models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), 0, add_dt_threads[tn], dt_threads[tn], total_dt_threads[tn], r);
                     if (options.which_likelihood<2) {
                         double w = likelihood_calc.binomial_lik(reporting_rate_threads[tn], particles.get_traj(i)->get_total_traj(), add_dt_threads[tn]+total_dt_threads[tn], 0, add_dt_threads[tn], num_groups_threads[tn], false);
                         particles.set_weight(w, i, false);
@@ -104,10 +106,12 @@ namespace EpiGenPfilter {
 #pragma omp parallel for shared (particles, values)
             for (int i=0; i<num_particles; i++) {
                 int tn = omp_get_thread_num();
+                gsl_rng* r = gsl_rng_alloc( gsl_rng_mt19937 );
+                gsl_rng_set( r, omp_get_thread_num() + i );
                 // Adjust length of trajectory
                 //                    if (tn==0) std::cout << i << ' ' << std::endl;
                 particles.get_traj(i)->resize(end_dt-start_dt, options.num_groups);
-                models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), start_dt_threads[tn], end_dt_threads[tn], dt_threads[tn], total_dt_threads[tn], options.rng[tn]);
+                models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), start_dt_threads[tn], end_dt_threads[tn], dt_threads[tn], total_dt_threads[tn], r);
                 double w = 1.0;
                 double temp = 0.0;
                 if (options.which_likelihood<2) {

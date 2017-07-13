@@ -53,13 +53,6 @@ int main(int argc, const char * argv[]) {
     init_traj.initialise_file(traj_output, sum_every);
     std::vector <Trajectory> init_traj_threads (num_threads, init_traj);
     Model sim_model;
-    const gsl_rng_type * rng_t = gsl_rng_mt19937;
-    gsl_rng **rng;
-    rng = (gsl_rng **) malloc(num_threads * sizeof(gsl_rng *));
-    for (int tn = 0; tn!= num_threads; tn++) {
-        rng[tn] = gsl_rng_alloc(rng_t);
-        gsl_rng_set(rng[tn], omp_get_thread_num()+1);
-    }
     // A single simulation
     if (replicates==1) {
         sim_model.simulate(values, param_names, &init_traj, 0, total_dt, dt_size, total_dt, rng[0]);
@@ -82,9 +75,9 @@ int main(int argc, const char * argv[]) {
             Trajectory * traj_ptr = new Trajectory(init_traj_threads[tn]);
             gsl_rng* r = gsl_rng_alloc( gsl_rng_mt19937 );
             gsl_rng_set( r, omp_get_thread_num() + i );
-                sim_model_tn[tn].simulate(values_threads[tn], param_names_threads[tn], traj_ptr, 0, total_dt_threads[tn], dt_size_threads[tn], total_dt_threads[tn], r);
-                if (tn==0) std::cout << i << " " << std::endl;
-                traj_ptr->print_to_file(i, traj_output_threads[tn], sum_every, true);
+            sim_model_tn[tn].simulate(values_threads[tn], param_names_threads[tn], traj_ptr, 0, total_dt_threads[tn], dt_size_threads[tn], total_dt_threads[tn], r);
+            if (tn==0) std::cout << i << " " << std::endl;
+            traj_ptr->print_to_file(i, traj_output_threads[tn], sum_every, true);
             gsl_rng_free(r);
         }
     }
