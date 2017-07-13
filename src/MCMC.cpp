@@ -123,7 +123,7 @@ namespace EpiGenMCMC_MCMC {
         rng = (gsl_rng **) malloc(options.num_threads * sizeof(gsl_rng *));
         for (int i = 0; i != options.num_threads; ++i) {
             rng[i] = gsl_rng_alloc(rng_t);
-            gsl_rng_set(rng[i], seed1+i);
+            gsl_rng_set(rng[i], seed1+i*options.particles);
         }
         options.rng = rng;
         initialise_logfile(options.log_filename, model_params, options, seed1, seed2);
