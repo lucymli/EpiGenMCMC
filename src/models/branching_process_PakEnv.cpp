@@ -52,7 +52,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     }
     int ran_num = (int)gsl_ran_flat(rng, 0, custom_prob.size());
     if (start_dt < step_size) {  // Set initial number of infected
-        traj->resize_recoveries(total_dt);
+        traj->resize_recoveries(total_dt+1);
         int init_inf = (int)round(model_params[17]);
         traj->set_state(init_inf, 0);
         for (int i=0; i!=init_inf; ++i) {

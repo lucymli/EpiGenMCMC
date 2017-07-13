@@ -38,6 +38,7 @@ namespace EpiGenPfilter {
             reporting_rate = model_params.get("reporting");
         }
         std::vector <std::string> param_names = model_params.get_names_vector();
+        std::vector <std::vector<std::string> > param_names_threads (options.num_threads);
         if (model_params.param_exists("time_before_data")) {
             add_dt = model_params.get("time_before_data");
         }
@@ -57,6 +58,13 @@ namespace EpiGenPfilter {
         for (int i=0; i<options.num_threads; ++i) {
             models.push_back(sim_model);
         }
+        std::vector <int> add_dt_threads (options.num_threads, add_dt);
+        std::vector <int> start_dt_threads (options.num_threads, 0);
+        std::vector <int> end_dt_threads (options.num_threads, add_dt);
+        std::vector <double> dt_threads (options.num_threads, sim_dt);
+        std::vector <int> total_dt_threads(options.num_threads, total_dt);
+        std::vector <double> reporting_rate_threads(options.num_threads, reporting_rate);
+        std::vector <int> num_groups_threads(options.num_threads, num_groups);
         // Simulate model and calculate likelihood assuming no observed data
         if (model_params.param_exists("time_before_data")) {
             if (add_dt > 0) {
@@ -65,20 +73,19 @@ namespace EpiGenPfilter {
 //                for (int i=0; i!=num_particles; ++i) {
 //                    curr_trajs.push_back(particles.get_traj(i));
 //                }
-#pragma omp parallel for shared(particles, values) schedule(static, 1)
-                for (int tn=0; tn<options.num_threads; tn++) {
-                    for (int i=tn; i<num_particles; i+=options.num_threads) {
-                        // Adjust length of trajectory
-                        particles.get_traj(i)->resize(add_dt, num_groups);
-                        models[tn].simulate(values[tn], param_names, particles.get_traj(i), 0, add_dt, sim_dt, total_dt, options.rng[tn]);
-                        if (options.which_likelihood<2) {
-                            double w = likelihood_calc.binomial_lik(reporting_rate, particles.get_traj(i)->get_total_traj(), add_dt+total_dt, 0, add_dt, num_groups, false);
-                            particles.set_weight(w, i, false);
-                        }
-                        if (options.save_traj) {
-                            particles.save_traj_to_matrix(i, 0, add_dt);
-                            particles.save_ancestry(i, 0, add_dt);
-                        }
+#pragma omp parallel for shared(particles, values)
+                for (int i=0; i<num_particles; i++) {
+                    int tn = omp_get_thread_num();
+                    // Adjust length of trajectory
+                    particles.get_traj(i)->resize(add_dt, num_groups);
+                    models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), 0, add_dt_threads[tn], dt_threads[tn], total_dt_threads[tn], options.rng[tn]);
+                    if (options.which_likelihood<2) {
+                        double w = likelihood_calc.binomial_lik(reporting_rate_threads[tn], particles.get_traj(i)->get_total_traj(), add_dt_threads[tn]+total_dt_threads[tn], 0, add_dt_threads[tn], num_groups_threads[tn], false);
+                        particles.set_weight(w, i, false);
+                    }
+                    if (options.save_traj) {
+                        particles.save_traj_to_matrix(i, 0, add_dt);
+                        particles.save_ancestry(i, 0, add_dt);
                     }
                 }
             }
@@ -91,34 +98,35 @@ namespace EpiGenPfilter {
 //            std::vector<double> we(options.particles, 0.0), wg(options.particles, 0.0);
             start_dt = t*options.pfilter_every;
             end_dt = std::min(total_dt, (t+1)*options.pfilter_every);
+            std::fill(start_dt_threads.begin(), start_dt_threads.end(), start_dt);
+            std::fill(end_dt_threads.begin(), end_dt_threads.end(), end_dt);
             omp_set_num_threads(options.num_threads);
-#pragma omp parallel for shared (particles, values) schedule(static,1)
-            for (int tn=0; tn<options.num_threads; tn++) {
-                for (int i=tn; i<num_particles; i+=options.num_threads) {
-                    // Adjust length of trajectory
-//                    if (tn==0) std::cout << i << ' ' << std::endl;
-                    particles.get_traj(i)->resize(end_dt-start_dt, options.num_groups);
-                    models[tn].simulate(values[tn], param_names, particles.get_traj(i), start_dt, end_dt, sim_dt, total_dt, options.rng[tn]);
-                    double w = 1.0;
-                    double temp = 0.0;
-                    if (options.which_likelihood<2) {
-                        double A = particles.get_traj(i)->get_total_traj();
-                        temp = likelihood_calc.binomial_lik(reporting_rate, A, epi_data.get_data_ptr(0), add_dt+total_dt, start_dt, end_dt, add_dt, options.num_groups, false);
-                        w *= temp;
-//                        we[i] = log(temp);
-                    }
-                    if (options.which_likelihood != 1) {
-                        temp = likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(1, 0), particles.get_traj(i)->get_traj_ptr(2, 0),
-                                                            tree_data.get_binomial_ptr(0), tree_data.get_interval_ptr(0), tree_data.get_ends_ptr(0),
-                                                            start_dt, end_dt, add_dt, false);
-                        w *= temp;
-//                        wg[i] = log(temp);
-                    }
-                    particles.set_weight(w, i, true);
-                    if (options.save_traj) {
-                        particles.save_traj_to_matrix(i, start_dt+add_dt, end_dt+add_dt);
-                        particles.save_ancestry(i, start_dt+add_dt, end_dt+add_dt);
-                    }
+#pragma omp parallel for shared (particles, values)
+            for (int i=0; i<num_particles; i++) {
+                int tn = omp_get_thread_num();
+                // Adjust length of trajectory
+                //                    if (tn==0) std::cout << i << ' ' << std::endl;
+                particles.get_traj(i)->resize(end_dt-start_dt, options.num_groups);
+                models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), start_dt_threads[tn], end_dt_threads[tn], dt_threads[tn], total_dt_threads[tn], options.rng[tn]);
+                double w = 1.0;
+                double temp = 0.0;
+                if (options.which_likelihood<2) {
+                    double A = particles.get_traj(i)->get_total_traj();
+                    temp = likelihood_calc.binomial_lik(reporting_rate_threads[tn], A, epi_data.get_data_ptr(0), add_dt_threads[tn]+total_dt_threads[tn], start_dt_threads[tn], end_dt_threads[tn], add_dt_threads[tn], num_groups_threads[tn], false);
+                    w *= temp;
+                    //                        we[i] = log(temp);
+                }
+                if (options.which_likelihood != 1) {
+                    temp = likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(1, 0), particles.get_traj(i)->get_traj_ptr(2, 0),
+                                                          tree_data.get_binomial_ptr(0), tree_data.get_interval_ptr(0), tree_data.get_ends_ptr(0),
+                                                          start_dt_threads[tn], end_dt_threads[tn], add_dt_threads[tn], false);
+                    w *= temp;
+                    //                        wg[i] = log(temp);
+                }
+                particles.set_weight(w, i, true);
+                if (options.save_traj) {
+                    particles.save_traj_to_matrix(i, start_dt_threads[tn]+add_dt_threads[tn], end_dt_threads[tn]+add_dt_threads[tn]);
+                    particles.save_ancestry(i, start_dt_threads[tn]+add_dt_threads[tn], end_dt_threads[tn]+add_dt_threads[tn]);
                 }
             }
 //            std::cout << "Epi Weight: " << std::accumulate(we.begin(), we.end(), 0.0) << " Gen Weight: " << std::accumulate(wg.begin(), wg.end(), 0.0) << " Total: " << particles.get_total_weight() << std::endl;
