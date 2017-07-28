@@ -55,8 +55,11 @@ int main(int argc, const char * argv[]) {
     Model sim_model;
     // A single simulation
     if (replicates==1) {
+        gsl_rng* rr = gsl_rng_alloc( gsl_rng_mt19937 );
+        gsl_rng_set( rr, 0);
         sim_model.simulate(values, param_names, &init_traj, 0, total_dt, dt_size, total_dt, rng[0]);
         init_traj.print_to_file(traj_output, sum_every, true);
+        gsl_rng_free(rr);
     } else {
         // Parallelised simulations
         std::vector <Trajectory *> trajectories;
