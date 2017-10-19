@@ -121,7 +121,7 @@ namespace EpiGenPfilter {
                     //                        we[i] = log(temp);
                 }
                 if (options.which_likelihood != 1) {
-                    temp = likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(1, 0), particles.get_traj(i)->get_traj_ptr(2, 0),
+                    temp = likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(0, 0), particles.get_traj(i)->get_traj_ptr(1, 0),
                                                           tree_data.get_binomial_ptr(0), tree_data.get_interval_ptr(0), tree_data.get_ends_ptr(0),
                                                           start_dt_threads[tn], end_dt_threads[tn], add_dt_threads[tn], false);
                     w *= temp;
