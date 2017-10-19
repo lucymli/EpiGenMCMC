@@ -69,6 +69,14 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         //
         // Transitions
         //
+        if (t<(R0_T0)) R0_now = R0_0;
+        else if (t < R0_T1) R0_now = R0_1;
+        else if (t < R0_T2) R0_now = R0_2;
+        else if (t < R0_T3) R0_now = R0_3;
+        else if (t < R0_T4) R0_now = R0_4;
+        else R0_now = R0_5;
+        time_of_year = ((double)t*step_size)+phase;
+        Re = R0_now * (1.0 + amplitude * cos(2.0*M_PI*time_of_year));
         // Recoveries: I --> R
         recoveries = traj->num_recover_at(t-start_dt);
         if (recoveries > 3000) { // Assume that if more than 3000 people recover within a day, then the epidemic is too large.
@@ -76,14 +84,6 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         }
         else if (recoveries > 0) {
             traj->set_traj(0, recoveries, t-start_dt);
-            if (t<(R0_T0)) R0_now = R0_0;
-            else if (t < R0_T1) R0_now = R0_1;
-            else if (t < R0_T2) R0_now = R0_2;
-            else if (t < R0_T3) R0_now = R0_3;
-            else if (t < R0_T4) R0_now = R0_4;
-            else R0_now = R0_5;
-            time_of_year = ((double)t*step_size)+phase;
-            Re = R0_now * (1.0 + amplitude * cos(2.0*M_PI*time_of_year));
             new_infections = gsl_ran_negative_binomial(rng, k/(k+Re), k*recoveries);
             if (new_infections > 0) {
                 for (int i=0; i!=new_infections; ++i) {
@@ -99,12 +99,12 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         }
         // Record 1/N for coalescent rate calculation
         if (num_infected > 0.0) {
-            traj->set_traj(1, num_infected, t-start_dt);
-            traj->set_traj(2, Re/(rateE2I*rateI2R)*(1.0+1.0/k), t-start_dt);
+            traj->set_traj(0, num_infected, t-start_dt);
+            traj->set_traj(1, Re/(rateE2I*rateI2R)*(1.0+1.0/k), t-start_dt);
         }
         else {
+            traj->set_traj(0, 0.0, t-start_dt);
             traj->set_traj(1, 0.0, t-start_dt);
-            traj->set_traj(2, 0.0, t-start_dt);
             break;
         }
     }
