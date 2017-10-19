@@ -84,10 +84,10 @@ TreeData::TreeData(std::string filename) {
     std::string line;
     file >> num_time_steps >> time_step_size;
     bool first_found = false;
+    std::getline(file, line);
     // Read in binomial data
     for (int t=0; t!=num_time_steps; ++t) {
         std::getline(file, line);
-        if (line.empty()) std::getline(file, line);
         std::istringstream input(line);
         if (t==0) starts.push_back(0);
         else {
