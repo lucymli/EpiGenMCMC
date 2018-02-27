@@ -353,13 +353,13 @@ void Trajectory::replace(Trajectory * new_traj) {
     initial_states.clear();
     initial_states.insert(initial_states.begin(), new_traj->initial_states.begin(), new_traj->initial_states.end());
     for (int i=0; i!=trajectory.size(); ++i) {
-        trajectory[i] = new_traj->get_traj(1, i);
+        trajectory[i] = new_traj->get_traj(0, i);
     }
     for (int i=0; i!=trajectory2.size(); ++i) {
-        trajectory2[i] = new_traj->get_traj(2, i);
+        trajectory2[i] = new_traj->get_traj(1, i);
     }
-    for (int i=0; i!=trajectory2.size(); ++i) {
-        trajectory3[i] = new_traj->get_traj(3, i);
+    for (int i=0; i!=trajectory3.size(); ++i) {
+        trajectory3[i] = new_traj->get_traj(2, i);
     }
     for (int i=0; i!=recoveries.size(); ++i) {
         recoveries[i] = new_traj->recoveries[i];
