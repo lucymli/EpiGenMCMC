@@ -76,11 +76,14 @@ int main(int argc, const char * argv[]) {
             rng[thread] = gsl_rng_alloc(gsl_rng_mt19937);
             gsl_rng_set(rng[thread], seed_num+thread);
         }
-#pragma omp parallel for schedule(static,1)
+//#pragma omp parallel for schedule(static,1)
         for (int tn=0; tn<num_threads; tn++) {
             for (int i=tn; i<replicates; i+=num_threads) {
-                sim_model_tn[tn].simulate(values_threads[tn], param_names_threads[tn], trajectories[tn], 0, total_dt_threads[tn], dt_size_threads[tn], total_dt_threads[tn], rng[tn]);
+                gsl_rng* rr = gsl_rng_alloc( gsl_rng_mt19937 );
+                gsl_rng_set( rr, seed_num+i);
+                sim_model_tn[tn].simulate(values_threads[tn], param_names_threads[tn], trajectories[tn], 0, total_dt_threads[tn], dt_size_threads[tn], total_dt_threads[tn], rr);
                 trajectories[tn]->print_to_file(i, traj_output_threads[tn], sum_every, true);
+                trajectories[tn]->reset();
             }
         }
         for (int tn=0; tn<num_threads; tn++) {
