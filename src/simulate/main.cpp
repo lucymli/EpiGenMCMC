@@ -76,7 +76,7 @@ int main(int argc, const char * argv[]) {
             rng[thread] = gsl_rng_alloc(gsl_rng_mt19937);
             gsl_rng_set(rng[thread], seed_num+thread);
         }
-//#pragma omp parallel for schedule(static,1)
+#pragma omp parallel for schedule(static,1)
         for (int tn=0; tn<num_threads; tn++) {
             for (int i=tn; i<replicates; i+=num_threads) {
                 gsl_rng* rr = gsl_rng_alloc( gsl_rng_mt19937 );
