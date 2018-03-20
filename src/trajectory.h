@@ -18,7 +18,7 @@
 
 class Trajectory{
     std::vector <double> trajectory;
-    std::vector <double> trajectory2;
+    
     std::vector <double> trajectory3;
     std::vector <double> initial_states;
     std::vector <double> states;
@@ -28,6 +28,7 @@ class Trajectory{
 public:
     Trajectory();
     Trajectory(int, int);
+    std::vector <double> trajectory2;
     void initialise_file(std::string, int);
     void resize(int);
     void resize(int, int);

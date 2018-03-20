@@ -44,7 +44,7 @@ Trajectory::Trajectory(int numT, int numGroups) {
     num_time_steps = numT;
     num_groups = numGroups;
     trajectory.resize(numT*numGroups);
-    trajectory2.resize(numT);
+    trajectory2.resize(numT*num_groups);
     trajectory3.resize(numT);
     recoveries.resize(numT);
 //    initialise_file(filename);
@@ -66,7 +66,7 @@ void Trajectory::resize(int length) {
 void Trajectory::resize(int length, int groups) {
     if (trajectory.size() != length*groups) {
         trajectory.resize(length*groups);
-        trajectory2.resize(length);
+        trajectory2.resize(length*groups);
         trajectory3.resize(length);
     }
     fill(trajectory.begin(), trajectory.end(), 0.0);
@@ -92,6 +92,21 @@ void Trajectory::print_to_file(int iteration, std::string filename, int every, b
                     count = trajectory[i*num_time_steps+t];
                 }
                 file << "\t" << count;
+            }
+        }
+        for (int i=0; i<num_groups; ++i) {
+            for (int t=0; t<total_steps; t+=every) {
+                double count = 0.0;
+                if (sum_across) {
+                    for (int j=0; j<std::min(every, num_time_steps-t); ++j) {
+                        count += trajectory2[i*num_time_steps+t+j];
+                    }
+                    count /= (double) std::min(every, num_time_steps-t);
+                }
+                else {
+                    count = trajectory2[i*num_time_steps+t];
+                }
+                file << "\t" << std::round(count);
             }
         }
     }
@@ -142,6 +157,21 @@ void Trajectory::print_to_file(std::string filename, int every, bool sum_across)
                     count = trajectory[i*num_time_steps+t];
                 }
                 file << "\t" << count;
+            }
+        }
+        for (int i=0; i<num_groups; ++i) {
+            for (int t=0; t<total_steps; t+=every) {
+                double count = 0.0;
+                if (sum_across) {
+                    for (int j=0; j<std::min(every, num_time_steps-t); ++j) {
+                        count += trajectory2[i*num_time_steps+t+j];
+                    }
+                    count /= (double) std::min(every, num_time_steps-t);
+                }
+                else {
+                    count = trajectory2[i*num_time_steps+t];
+                }
+                file << "\t" << std::round(count);
             }
         }
     }
@@ -201,12 +231,11 @@ void Trajectory::set_traj(int i, double value, int time) {
 }
 
 void Trajectory::set_traj(int i, double value, int time, int group) {
-    trajectory[group*num_time_steps+time] = value;
+    if (i==0) trajectory[group*num_time_steps+time] = value;
+    else if (i==1) trajectory2[group*num_time_steps+time] = value;
+    else trajectory3[time] = value;
 }
 
-//void Trajectory::set_traj2(double value, int time) {
-//    trajectory2[time] = value;
-//}
 
 void Trajectory::set_state(double value, int time) {
     states[time] = value;

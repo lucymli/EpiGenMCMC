@@ -9,7 +9,7 @@
 #include <omp.h>
 #include <iostream>
 #include <sstream>
-#include "../model.h"
+#include "model.h"
 
 // Argument order:
 //   1. Parameters

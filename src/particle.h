@@ -22,7 +22,8 @@ class Particle {
     std::vector <double> normalised_weights;
     std::vector <unsigned int> next_particles;
     std::vector <int> parents;
-    std::vector <double> overall_traj; // P1[Group1[T1, T2...], Group2[T1, T2...]...], P2[] ...
+    std::vector <double> overall_traj; // Incidence: P1[Group1[T1, T2...], Group2[T1, T2...]...], P2[] ...
+    std::vector <double> overall_traj2; // Prevalence: P1[Group1[T1, T2...], Group2[T1, T2...]...], P2[] ...
     std::vector <int> particle_ancestry;
     std::vector <int> non_zero_particles;
     std::vector <double> cumulative_weights;

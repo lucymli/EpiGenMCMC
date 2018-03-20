@@ -9,6 +9,11 @@
 #include <stdio.h>
 #include "../model.h"
 
+Model::Model () {
+    use_deterministic = false;
+}
+
+
 void Model::set_custom_prob(double alpha, double scale) {
     custom_prob.resize(0);
     double w;
@@ -99,15 +104,16 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         }
         // Record 1/N for coalescent rate calculation
         if (num_infected > 0.0) {
-            traj->set_traj(0, num_infected, t-start_dt);
-            traj->set_traj(1, Re/(rateE2I*rateI2R)*(1.0+1.0/k), t-start_dt);
+            traj->set_traj(1, num_infected, t-start_dt);
+            traj->set_traj(2, Re/(rateE2I*rateI2R)*(1.0+1.0/k), t-start_dt);
         }
         else {
-            traj->set_traj(0, 0.0, t-start_dt);
             traj->set_traj(1, 0.0, t-start_dt);
+            traj->set_traj(2, 0.0, t-start_dt);
             break;
         }
     }
     traj->set_state(num_infected, 0);
     traj->delete_recoveries_before(end_dt-start_dt);
 }
+

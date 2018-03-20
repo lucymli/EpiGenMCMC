@@ -35,8 +35,10 @@ void Particle::start_particle_tracing(int input_num_time_steps, int input_num_gr
     num_groups = input_num_groups;
     num_time_steps = input_num_time_steps;
     overall_traj.clear();
+    overall_traj2.clear();
     particle_ancestry.clear();
     overall_traj.resize(num_time_steps*num_groups*num_particles, 0.0);
+    overall_traj2.resize(num_time_steps*num_groups*num_particles, 0.0);
     particle_ancestry.resize(num_time_steps*num_groups*num_particles, 0);
 }
 
@@ -47,6 +49,8 @@ void Particle::save_traj_to_matrix(int start_dt, int end_dt) {
                 int index = num_time_steps*num_groups*particlei+num_time_steps*group_id+timei;
                 double value = trajectories[particlei]->get_traj(0, timei-start_dt, group_id);
                 overall_traj[index] = value;
+                value = trajectories[particlei]->get_traj(1, timei-start_dt, group_id);
+                overall_traj2[index] = value;
             }
         }
     }
@@ -58,6 +62,8 @@ void Particle::save_traj_to_matrix(int particle_id, int start_dt, int end_dt) {
             int index = num_time_steps*num_groups*particle_id+num_time_steps*group_id+timei;
             double value = trajectories[particle_id]->get_traj(0, timei-start_dt, group_id);
             overall_traj[index] = value;
+            value = trajectories[particle_id]->get_traj(1, timei-start_dt, group_id);
+            overall_traj2[index] = value;
         }
     }
 }
@@ -103,8 +109,10 @@ void Particle::retrace_traj(Trajectory& output_traj, gsl_rng * rng) {
     double traj_size;
     for (groupi=num_groups-1; groupi>=0; --groupi) {
         index = total_steps*a+num_time_steps*groupi+timei; // Position on the overall_traj
-        traj_size = overall_traj[index]; // Epidemic size for particle a at time timei
+        traj_size = overall_traj[index]; // Incidence for particle a at time timei
         output_traj.set_traj(0, traj_size, timei, groupi);
+        traj_size = overall_traj2[index]; // Prevalence for particle a at time timei
+        output_traj.set_traj(1, traj_size, timei, groupi);
     }
     a = particle_ancestry[index];
     for (timei=num_time_steps-2; timei>=0; --timei) {
@@ -112,6 +120,8 @@ void Particle::retrace_traj(Trajectory& output_traj, gsl_rng * rng) {
             index = total_steps*a+num_time_steps*groupi+timei; // Position on the overall_traj
             traj_size = overall_traj[index];
             output_traj.set_traj(0, traj_size, timei, groupi);
+            traj_size = overall_traj2[index];
+            output_traj.set_traj(1, traj_size, timei, groupi);
         }
         a = particle_ancestry[index];
     }
