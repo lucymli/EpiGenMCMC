@@ -9,10 +9,6 @@
 #include <stdio.h>
 #include "../model.h"
 
-Model::Model () {
-    use_deterministic = false;
-}
-
 
 void Model::set_custom_prob(double alpha, double scale) {
     custom_prob.resize(0);
