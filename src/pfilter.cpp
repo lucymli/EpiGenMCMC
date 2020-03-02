@@ -44,6 +44,9 @@ namespace EpiGenPfilter {
         if (model_params.param_exists("reporting")) {
             reporting_rate = model_params.get("reporting");
         }
+        else if (model_params.param_exists("reporting0")) {
+            reporting_rate = model_params.get("reporting0");
+        }
         std::vector <std::string> param_names = model_params.get_names_vector();
         std::vector <std::vector<std::string> > param_names_threads (options.num_threads);
         if (model_params.param_exists("time_before_data")) {
@@ -106,6 +109,22 @@ namespace EpiGenPfilter {
             //            std::vector<double> we(options.particles, 0.0), wg(options.particles, 0.0);
             start_dt = t*options.pfilter_every;
             end_dt = std::min(total_dt, (t + 1)*options.pfilter_every);
+            if (model_params.param_exists("reportingT0")) { 
+                int time_change_i = 0;
+                bool reporting_rate_found = false;
+                reporting_rate = 1;
+                while (!reporting_rate_found & model_params.param_exists("reportingT"+str(time_change_i))) {
+                    reporting_rate = model_params.get("reporting"+str(time_change_i));
+                    if (end_dt < reportingT0) {
+                        reporting_rate *= model_params.get("reporting"+str(time_change_i));
+                        reporting_rate_found = true;
+                    }
+                    time_change_i++;
+                }
+                if (!reporting_rate_found) {
+                    reporting_rate *= model_params.get("reporting"+str(time_change_i));
+                }
+            }
             std::fill(start_dt_threads.begin(), start_dt_threads.end(), start_dt);
             std::fill(end_dt_threads.begin(), end_dt_threads.end(), end_dt);
             omp_set_num_threads(options.num_threads);
