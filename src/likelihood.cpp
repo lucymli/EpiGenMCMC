@@ -3,7 +3,6 @@
 //  EpiGenMCMC
 //
 //  Created by Lucy Li on 13/04/2016.
-//  Copyright (c) 2016 Lucy Li, Imperial College London. All rights reserved.
 //
 
 
