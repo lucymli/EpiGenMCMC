@@ -113,16 +113,16 @@ namespace EpiGenPfilter {
                 int time_change_i = 0;
                 bool reporting_rate_found = false;
                 reporting_rate = 1;
-                while (!reporting_rate_found & model_params.param_exists("reportingT"+str(time_change_i))) {
-                    reporting_rate = model_params.get("reporting"+str(time_change_i));
-                    if (end_dt < reportingT0) {
-                        reporting_rate *= model_params.get("reporting"+str(time_change_i));
+                while (!reporting_rate_found & model_params.param_exists("reportingT"+std::to_string(time_change_i))) {
+                    reporting_rate = model_params.get("reporting"+std::to_string(time_change_i));
+                    if (end_dt < reporting_rate) {
+                        reporting_rate *= model_params.get("reporting"+std::to_string(time_change_i));
                         reporting_rate_found = true;
                     }
                     time_change_i++;
                 }
                 if (!reporting_rate_found) {
-                    reporting_rate *= model_params.get("reporting"+str(time_change_i));
+                    reporting_rate *= model_params.get("reporting"+std::to_string(time_change_i));
                 }
             }
             std::fill(start_dt_threads.begin(), start_dt_threads.end(), start_dt);

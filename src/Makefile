@@ -21,7 +21,7 @@ PolioPakEnvBranching : $(BASEOBJ) $(BRANCHINGPOLIOPAKENVOBJ)
 
 BRANCHINGCOVID19OBJ = branching_process_covid19.o
 covid19branching : $(BASEOBJ) $(BRANCHINGCOVID19OBJ)
-        $(COMMAND) $BRNACHINGCOVID19OBJ) -o covid19branching $(LGSLFLAGS)
+	$(COMMAND) $(BRANCHINGCOVID19OBJ) -o covid19branching $(LGSLFLAGS)
 
 all : SIRoffspring PolioPakEnvBranching covid19branching
 
@@ -64,7 +64,7 @@ $(BRANCHINGPOLIOPAKENVOBJ) : model.h parameter.h trajectory.h $(MODELPATH)/branc
 	$(CC) $(CFLAGS) -c $(MODELPATH)/branching_process_PakEnv.cpp
 
 $(BRANCHINGCOVID19OBJ) : model.h parameter.h trajectory.h $(MODELPATH)/branching_process_covid19.cpp
-        $(CC) $(CFLAGS) -c $(MODELPATH)/branching_process_covid19.cpp
+	$(CC) $(CFLAGS) -c $(MODELPATH)/branching_process_covid19.cpp
 
 clean :
 	rm *.o

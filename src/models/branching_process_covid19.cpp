@@ -8,9 +8,6 @@
 #include <stdio.h>
 #include "../model.h"
 
-Model::Model () {
-    use_deterministic = false;
-}
 
 
 void Model::set_custom_prob(double alpha, double scale) {
@@ -27,8 +24,8 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         return;
     }
     // /* For slightly faster implementation, call parameters by index
-    int R0_array_size = 7
-    int R0_array[R0_array_size]
+    int R0_array_size = 7;
+    int R0_array[R0_array_size];
     std::copy(model_params.begin(), model_params.begin()+R0_array_size, R0_array);
     int R0_change_times[R0_array_size-1];
     std::copy(model_params.begin()+8, model_params.begin()+8+R0_array_size-1, R0_change_times);
@@ -67,22 +64,22 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         Re_found = false;
         for (int R0_i=0; R0_i<(R0_array_size-1); R0_i++) {
             if (t < R0_change_times[R0_i]) {
-                Re = R0_array[R0_i]
+                Re = R0_array[R0_i];
                 Re_found = true;
                 break;
             }
         }
         if (!Re_found) {
-            Re = R0_array[R0_array_size-1]
-            Re_found = true
+            Re = R0_array[R0_array_size-1];
+            Re_found = true;
         }
-        k = Re/(cv-1);
+        double k = Re/(cv-1);
         // Recoveries: I --> R
         recoveries = traj->num_recover_at(t-start_dt);
         // if (recoveries > 3000) { // Assume that if more than 3000 people recover within a day, then the epidemic is too large.
         //     num_infected = 0.0;
         // }
-        else if (recoveries > 0) {
+        if (recoveries > 0) {
             traj->set_traj(0, recoveries, t-start_dt);
             new_infections = gsl_ran_negative_binomial(rng, k/(k+Re), k*recoveries);
             if (new_infections > 0) {
