@@ -3,13 +3,12 @@
 //  EpiGenMCMC
 //
 //  Created by Lucy Li on 07/04/2016.
-//  Copyright (c) 2016 Lucy Li, Imperial College London. All rights reserved.
 //
 
 #include <omp.h>
 #include <iostream>
 #include <sstream>
-#include "model.h"
+#include "../model.h"
 
 // Argument order:
 //   1. Parameters
