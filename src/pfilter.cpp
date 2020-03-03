@@ -13,7 +13,7 @@
 
 namespace EpiGenPfilter {
     double pfilter(Model & sim_model, Parameter & model_params, MCMCoptions & options, Particle &particles, Trajectory & output_traj, TimeSeriesData &epi_data, TreeData &tree_data, MultiTreeData &multitree_data) {
-        int thread_max = omp_get_max_threads();
+        int thread_max = std::min(options.num_threads, omp_get_max_threads());
         gsl_rng** rngs = new gsl_rng*[thread_max];
         for (int thread = 0; thread < thread_max; thread++) {
             rngs[thread] = gsl_rng_alloc(gsl_rng_mt19937);
@@ -39,7 +39,7 @@ namespace EpiGenPfilter {
                 values[i][j] = model_params.get(j);
             }
         }
-        //        printf("Size of values = %d\n",values.size());
+        // printf("Size of values = %d\n",values.size());
         double reporting_rate = 1.0;
         if (model_params.param_exists("reporting")) {
             reporting_rate = model_params.get("reporting");
@@ -64,7 +64,7 @@ namespace EpiGenPfilter {
                 particles.start_particle_tracing(total_dt, num_groups);
             }
         }
-        std::vector <Model> models;
+	std::vector <Model> models;
         for (int i=0; i<options.num_threads; ++i) {
             models.push_back(sim_model);
         }
@@ -106,7 +106,7 @@ namespace EpiGenPfilter {
         int start_dt;
         int end_dt;
         for (t = 0; t != total_steps; ++t) {
-            //            std::vector<double> we(options.particles, 0.0), wg(options.particles, 0.0);
+            // std::vector<double> we(options.particles, 0.0), wg(options.particles, 0.0);
             start_dt = t*options.pfilter_every;
             end_dt = std::min(total_dt, (t + 1)*options.pfilter_every);
             if (model_params.param_exists("reportingT0")) { 
@@ -141,14 +141,14 @@ namespace EpiGenPfilter {
                         double A = particles.get_traj(i)->get_total_traj();
                         temp = likelihood_calc.binomial_lik(reporting_rate_threads[tn], A, epi_data.get_data_ptr(0), add_dt_threads[tn] + total_dt_threads[tn], start_dt_threads[tn], end_dt_threads[tn], add_dt_threads[tn], num_groups_threads[tn], false);
                         w *= temp;
-                        //                        we[i] = log(temp);
+                        // we[i] = log(temp);
                     }
                     if (options.which_likelihood != 1) {
                         temp = likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(0, 0), particles.get_traj(i)->get_traj_ptr(1, 0),
                                                               tree_data.get_binomial_ptr(0), tree_data.get_interval_ptr(0), tree_data.get_ends_ptr(0),
                                                               start_dt_threads[tn], end_dt_threads[tn], add_dt_threads[tn], false);
                         w *= temp;
-                        //                        wg[i] = log(temp);
+                        // wg[i] = log(temp);
                     }
                     particles.set_weight(w, i, true);
                     if (options.save_traj) {
@@ -157,8 +157,8 @@ namespace EpiGenPfilter {
                     }
                 }
             }
-            //            std::cout << "Epi Weight: " << std::accumulate(we.begin(), we.end(), 0.0) << " Gen Weight: " << std::accumulate(wg.begin(), wg.end(), 0.0) << " Total: " << particles.get_total_weight() << std::endl;
-            double curr_ESS = particles.get_ESS();
+            // std::cout << "Epi Weight: " << std::accumulate(we.begin(), we.end(), 0.0) << " Gen Weight: " << std::accumulate(wg.begin(), wg.end(), 0.0) << " Total: " << particles.get_total_weight() << std::endl;
+	    double curr_ESS = particles.get_ESS();
             if (curr_ESS < ESS_threshold) {
                 double total_weight = particles.get_total_weight();
                 if (total_weight == 0.0) {
