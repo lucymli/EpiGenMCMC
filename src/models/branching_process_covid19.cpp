@@ -9,7 +9,6 @@
 #include "../model.h"
 
 
-
 void Model::set_custom_prob(double alpha, double scale) {
     custom_prob.resize(0);
     double w;
@@ -25,14 +24,14 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     }
     // /* For slightly faster implementation, call parameters by index
     int R0_array_size = 7;
-    int R0_array[R0_array_size];
+    double R0_array[R0_array_size];
     std::copy(model_params.begin(), model_params.begin()+R0_array_size, R0_array);
     int R0_change_times[R0_array_size-1];
     std::copy(model_params.begin()+8, model_params.begin()+8+R0_array_size-1, R0_change_times);
     double cv = model_params[7];
     double alpha = model_params[27];
     double scale = model_params[28];
-    double Re = 0.0;
+    double Re = R0_array[0];
     double recoveries=0.0;
     double new_infections=0.0;
     double durI = 0.0;
@@ -56,22 +55,14 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     }
     // */
     double num_infected = traj->get_state(0);
-    bool Re_found = false;
     for (int t=start_dt; t<end_dt; ++t) {
         //
         // Transitions
         //
-        Re_found = false;
         for (int R0_i=0; R0_i<(R0_array_size-1); R0_i++) {
-            if (t < R0_change_times[R0_i]) {
-                Re = R0_array[R0_i];
-                Re_found = true;
-                break;
+            if (t >= R0_change_times[R0_i]) {
+                Re = R0_array[R0_i+1];
             }
-        }
-        if (!Re_found) {
-            Re = R0_array[R0_array_size-1];
-            Re_found = true;
         }
         double k = Re/(cv-1);
         // Recoveries: I --> R
