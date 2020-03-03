@@ -1,6 +1,5 @@
 CC=g++
 CFLAGS=-fopenmp -std=c++11
-LFLAGS=-liomp
 LDFLAGS=-L/usr/local/lib
 LGSLFLAGS=-lgsl -lgslcblas -lm
 
