@@ -61,7 +61,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         //
         for (int R0_i=0; R0_i<(R0_array_size-1); R0_i++) {
             if (t >= R0_change_times[R0_i]) {
-                Re = R0_array[R0_i+1];
+                Re *= R0_array[R0_i+1];
             }
         }
         double k = Re/(cv-1);
