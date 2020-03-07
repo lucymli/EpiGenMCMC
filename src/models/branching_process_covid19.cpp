@@ -59,6 +59,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         //
         // Transitions
         //
+        Re = R0_array[0];
         for (int R0_i=0; R0_i<(R0_array_size-1); R0_i++) {
             if (t >= R0_change_times[R0_i]) {
                 Re *= R0_array[R0_i+1];
@@ -71,7 +72,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
              num_infected = 0.0;
          }
         if (recoveries > 0) {
-            traj->set_traj(0, recoveries, t-start_dt);
+//          traj->set_traj(0, recoveries, t-start_dt);
             new_infections = gsl_ran_negative_binomial(rng, k/(k+Re), k*recoveries);
             if (new_infections > 0) {
                 for (int i=0; i!=new_infections; ++i) {
@@ -87,11 +88,11 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         }
         // Record 1/N for coalescent rate calculation
         if (num_infected > 0.0) {
-            traj->set_traj(1, num_infected, t-start_dt);
+            traj->set_traj(0, num_infected, t-start_dt);
             traj->set_traj(2, Re/(alpha*scale)*(1.0+1.0/k), t-start_dt);
         }
         else {
-            traj->set_traj(1, 0.0, t-start_dt);
+            traj->set_traj(0, 0.0, t-start_dt);
             traj->set_traj(2, 0.0, t-start_dt);
             break;
         }
