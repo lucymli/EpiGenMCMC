@@ -88,7 +88,7 @@ namespace EpiGenPfilter {
                     for (int i = tn; i < num_particles; i += thread_max) {
                         // Adjust length of trajectory
                         particles.get_traj(i)->resize(add_dt, num_groups);
-                        models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), 0, add_dt_threads[tn], dt_threads[tn], total_dt_threads[tn], rngs[tn]);
+                        models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), 0, add_dt_threads[tn], dt_threads[tn], add_dt_threads[tn]+total_dt_threads[tn], rngs[tn]);
                         if (options.which_likelihood < 2) {
                             double w = likelihood_calc.binomial_lik(reporting_rate_threads[tn], particles.get_traj(i)->get_total_traj(), add_dt_threads[tn] + total_dt_threads[tn], 0, add_dt_threads[tn], num_groups_threads[tn], false);
                             particles.set_weight(w, i, false);
@@ -106,7 +106,7 @@ namespace EpiGenPfilter {
         int start_dt;
         int end_dt;
         for (t = 0; t != total_steps; ++t) {
-	    bool track_particle_weights = true;
+	    bool track_particle_weights = false;
             std::vector<double> we(options.particles, 0.0), wg(options.particles, 0.0);
             start_dt = t*options.pfilter_every;
             end_dt = std::min(total_dt, (t + 1)*options.pfilter_every);
@@ -129,8 +129,8 @@ namespace EpiGenPfilter {
                 for (int i = tn; i < num_particles; i+=thread_max) {
                     // Adjust length of trajectory
                     particles.get_traj(i)->resize(end_dt - start_dt, options.num_groups);
-                    models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), start_dt_threads[tn], end_dt_threads[tn], dt_threads[tn], total_dt_threads[tn], rngs[tn]);
-                    double w = 1.0;
+                    models[tn].simulate(values[tn], param_names_threads[tn], particles.get_traj(i), start_dt_threads[tn], end_dt_threads[tn], dt_threads[tn], add_dt_threads[tn]+total_dt_threads[tn], rngs[tn]);
+		    double w = 1.0;
                     double temp = 0.0;
                     if (options.which_likelihood < 2) {
                         double A = particles.get_traj(i)->get_total_traj();
@@ -152,13 +152,13 @@ namespace EpiGenPfilter {
                     }
                 }
             }
-            if (track_particle_weights) std::cout << "Epi Weight: " << std::accumulate(we.begin(), we.end(), 0.0) << " Gen Weight: " << std::accumulate(wg.begin(), wg.end(), 0.0) << " Total: " << particles.get_total_weight() << std::endl;
+            if (track_particle_weights) std::cout << t << ") Epi Weight: " << std::accumulate(we.begin(), we.end(), 0.0) << " Gen Weight: " << std::accumulate(wg.begin(), wg.end(), 0.0) << " Total: " << particles.get_total_weight() << std::endl;
 	    double curr_ESS = particles.get_ESS();
             if (curr_ESS < ESS_threshold) {
                 double total_weight = particles.get_total_weight();
-                if (total_weight == 0.0) {
+                if ((total_weight == 0.0) || std::isinf(total_weight) || std::isnan(total_weight)) {
                     loglik += -0.1*std::numeric_limits<double>::max();
-                    std::cout << "stop time: " << end_dt << std::endl;
+                    std::cout << "stop time: " << t << std::endl;
                     break;
                 } else {
                     loglik += log(total_weight) - log(num_particles);
