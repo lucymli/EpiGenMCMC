@@ -112,7 +112,6 @@ namespace EpiGenPfilter {
             end_dt = std::min(total_dt, (t + 1)*options.pfilter_every);
             if (model_params.param_exists("reportingT0")) { 
                 int time_change_i = 0;
-                bool reporting_rate_found = false;
                 reporting_rate = model_params.get("reporting0");
                 while (model_params.param_exists("reportingT"+std::to_string(time_change_i))) {
                     if (end_dt >= model_params.get("reportingT"+std::to_string(time_change_i))) {
@@ -139,7 +138,7 @@ namespace EpiGenPfilter {
                         if (track_particle_weights) we[i] = log(temp);
                     }
                     if (options.which_likelihood != 1) {
-                        temp = likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(0, 0), particles.get_traj(i)->get_traj_ptr(1, 0),
+                        temp = likelihood_calc.coalescent_lik(particles.get_traj(i)->get_traj_ptr(1, 0), particles.get_traj(i)->get_traj_ptr(2, 0),
                                                               tree_data.get_binomial_ptr(0), tree_data.get_interval_ptr(0), tree_data.get_ends_ptr(0),
                                                               start_dt_threads[tn], end_dt_threads[tn], add_dt_threads[tn], false);
                         w *= temp;

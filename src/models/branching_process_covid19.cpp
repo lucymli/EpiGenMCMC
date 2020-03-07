@@ -70,6 +70,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         recoveries = traj->num_recover_at(t-start_dt);
          if (recoveries > 5000) { // Assume that if more than 3000 people recover within a day, then the epidemic is too large.
              num_infected = 0.0;
+             recoveries = 0.0;
          }
         if (recoveries > 0) {
 //          traj->set_traj(0, recoveries, t-start_dt);
@@ -88,11 +89,13 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         }
         // Record 1/N for coalescent rate calculation
         if (num_infected > 0.0) {
-            traj->set_traj(0, num_infected, t-start_dt);
+            traj->set_traj(0, new_infections, t-start_dt);
+            traj->set_traj(1, num_infected, t-start_dt);
             traj->set_traj(2, Re/(alpha*scale)*(1.0+1.0/k), t-start_dt);
         }
         else {
             traj->set_traj(0, 0.0, t-start_dt);
+            traj->set_traj(1, 0.0, t-start_dt);
             traj->set_traj(2, 0.0, t-start_dt);
             break;
         }
