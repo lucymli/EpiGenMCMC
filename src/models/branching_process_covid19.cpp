@@ -62,16 +62,16 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         Re = R0_array[0];
         for (int R0_i=0; R0_i<(R0_array_size-1); R0_i++) {
             if (t >= R0_change_times[R0_i]) {
-                Re *= R0_array[R0_i+1];
+                Re = R0_array[R0_i+1];
             }
         }
         double k = Re/(cv-1);
         // Recoveries: I --> R
         recoveries = traj->num_recover_at(t-start_dt);
-         if (recoveries > 5000) { // Assume that if more than 3000 people recover within a day, then the epidemic is too large.
-             num_infected = 0.0;
-             recoveries = 0.0;
-         }
+        if (recoveries > 5000) { // Assume that if more than 3000 people recover within a day, then the epidemic is too large.
+            num_infected = 0.0;
+            recoveries = 0.0;
+        }
         if (recoveries > 0) {
 //          traj->set_traj(0, recoveries, t-start_dt);
             new_infections = gsl_ran_negative_binomial(rng, k/(k+Re), k*recoveries);
