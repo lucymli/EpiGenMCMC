@@ -115,7 +115,7 @@ namespace EpiGenPfilter {
                 reporting_rate = model_params.get("reporting0");
                 while (model_params.param_exists("reportingT"+std::to_string(time_change_i))) {
                     if (end_dt >= model_params.get("reportingT"+std::to_string(time_change_i))) {
-                        reporting_rate *= model_params.get("reporting"+std::to_string(time_change_i+1));
+                        reporting_rate = model_params.get("reporting"+std::to_string(time_change_i+1));
                     }
 		    time_change_i++;
                 }
