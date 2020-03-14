@@ -69,7 +69,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         k = Re/(cv-1);
         // Recoveries: I --> R
         recoveries = traj->num_recover_at(t-start_dt);
-         if (recoveries > 5000) { // Assume that if more than 3000 people recover within a day, then the epidemic is too large.
+         if (recoveries > 50000) { // Assume that if more than 3000 people recover within a day, then the epidemic is too large.
              num_infected = 0.0;
              recoveries = 0.0;
          }
