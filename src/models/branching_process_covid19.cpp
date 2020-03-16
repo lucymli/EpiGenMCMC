@@ -23,14 +23,14 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         return;
     }
     // /* For slightly faster implementation, call parameters by index
-    int R0_array_size = 7;
+    int R0_array_size = 8;
     double R0_array[R0_array_size];
     std::copy(model_params.begin(), model_params.begin()+R0_array_size, R0_array);
     int R0_change_times[R0_array_size-1];
-    std::copy(model_params.begin()+8, model_params.begin()+8+R0_array_size-1, R0_change_times);
-    double cv = model_params[7];
-    double alpha = model_params[27];
-    double scale = model_params[28];
+    std::copy(model_params.begin()+R0_array_size+1, model_params.begin()+R0_array_size*2, R0_change_times);
+    double cv = model_params[R0_array_size];
+    double alpha = model_params[R0_array_size*4-1];
+    double scale = model_params[R0_array_size*4];
     double Re = R0_array[0];
     double recoveries=0.0;
     double new_infections=0.0;
@@ -44,7 +44,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
     int ran_num = (int)gsl_ran_flat(rng, 0, custom_prob.size());
     if (start_dt < step_size) {  // Set initial number of infected
         traj->resize_recoveries(total_dt+1);
-        int init_inf = (int)round(model_params[29]);
+        int init_inf = (int)round(model_params[R0_array_size*4+1]);
         traj->set_state(init_inf, 0);
         for (int i=0; i!=init_inf; ++i) {
             durI = custom_prob[ran_num];

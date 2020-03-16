@@ -120,6 +120,7 @@ namespace EpiGenPfilter {
 		    time_change_i++;
                 }
             }
+            std::fill(reporting_rate_threads.begin(), reporting_rate_threads.end(), reporting_rate);
             std::fill(start_dt_threads.begin(), start_dt_threads.end(), start_dt);
             std::fill(end_dt_threads.begin(), end_dt_threads.end(), end_dt);
             omp_set_num_threads(options.num_threads);
@@ -155,8 +156,9 @@ namespace EpiGenPfilter {
 	    double curr_ESS = particles.get_ESS();
             if (curr_ESS < ESS_threshold) {
                 double total_weight = particles.get_total_weight();
-                if ((total_weight == 0.0) || std::isinf(total_weight) || std::isnan(total_weight)) {
-                    loglik += -0.1*std::numeric_limits<double>::max();
+                if ((total_weight == 0.0) || std::isinf(total_weight) || std::isnan(total_weight))  {
+                    double left = (total_steps-t);
+                    loglik += -0.1*std::numeric_limits<double>::max()/1000*left;
                     std::cout << "stop time: " << t << std::endl;
                     break;
                 } else {
