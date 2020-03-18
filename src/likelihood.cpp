@@ -61,7 +61,8 @@ double Likelihood::binomial_lik(double reporting_rate, double process, std::vect
             loglik += log(1.0-reporting_rate) * (double)total_incidence;
         }
         else {
-            loglik += log(gsl_ran_binomial_pdf(total_data, reporting_rate, total_incidence));
+            loglik += log(gsl_ran_poisson_pdf(1, total_incidence*reporting_rate/total_data));
+            //loglik += log(gsl_ran_binomial_pdf(total_data, reporting_rate, total_incidence));
         }
     }
     if (return_log) return(loglik);
