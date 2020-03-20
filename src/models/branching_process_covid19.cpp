@@ -13,7 +13,7 @@ void Model::set_custom_prob(double alpha, double scale) {
     custom_prob.resize(0);
     double w;
     for (int i=0; i<5000; ++i) {
-        w = gsl_ran_gamma(model_rng, alpha, scale);
+        w = gsl_ran_weibull(model_rng, alpha, scale);
         custom_prob.push_back(w);
     }
 }
