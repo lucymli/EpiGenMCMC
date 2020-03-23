@@ -404,7 +404,7 @@ MCMCoptions::MCMCoptions(std::string filename) {
     std::ifstream file(filename);
     std::string line;
     verbose = false;
-    save_traj = true;
+    save_traj = false;
     use_lhs = false;
     num_threads = omp_get_num_threads();
     num_groups = 1;
