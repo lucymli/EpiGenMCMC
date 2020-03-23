@@ -426,13 +426,13 @@ MCMCoptions::MCMCoptions(std::string filename) {
             int num;
             file >> num;
             if (num == 0) verbose = false;
-            elif (num == 1) verbose = true;
+            else if (num == 1) verbose = true;
         }
         else if (line == "save_traj") {
             int num;
             file >> num;
             if (num == 0) save_traj = false;
-            if (num == 1) save_traj = true;
+            else if (num == 1) save_traj = true;
         }
         else if (line == "use_lhs") {
             int num;
