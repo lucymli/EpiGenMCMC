@@ -159,7 +159,7 @@ namespace EpiGenPfilter {
                 if ((total_weight == 0.0) || std::isinf(total_weight) || std::isnan(total_weight))  {
                     double left = (total_steps-t);
                     loglik += -0.1*std::numeric_limits<double>::max()/1000*left;
-                    std::cout << "stop time: " << t << std::endl;
+                   // std::cout << "stop time: " << t << std::endl;
                     break;
                 } else {
                     loglik += log(total_weight) - log(num_particles);

@@ -403,7 +403,7 @@ MCMCoptions::MCMCoptions(const MCMCoptions& old_copy) {
 MCMCoptions::MCMCoptions(std::string filename) {
     std::ifstream file(filename);
     std::string line;
-    verbose = true;
+    verbose = false;
     save_traj = true;
     use_lhs = false;
     num_threads = omp_get_num_threads();
