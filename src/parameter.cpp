@@ -411,6 +411,7 @@ MCMCoptions::MCMCoptions(std::string filename) {
     heat_factor = 1.0;
     heat_length = 0;
     cool_rate = 1.0;
+    num_trees = 1;
     while (file >> line) {
         if (line == "particles") file >> particles;
         else if (line == "iterations") file >> iterations;
