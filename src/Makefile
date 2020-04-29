@@ -22,9 +22,15 @@ BRANCHINGCOVID19OBJ = branching_process_covid19.o
 covid19branching : $(BASEOBJ) $(BRANCHINGCOVID19OBJ)
 	$(COMMAND) $(BRANCHINGCOVID19OBJ) -o covid19branching $(LGSLFLAGS)
 
+sim_covid19branching : simulate/main.o model.o parameter.o trajectory.o particle.o $(BRANCHINGCOVID19OBJ)
+	$(CC) $(CFLAGS) $(LDFLAGS) main.o model.o parameter.o trajectory.o particle.o $(BRANCHINGCOVID19OBJ) -o sim_covid19branching $(LGSLFLAGS)
+
 all : SIRoffspring PolioPakEnvBranching covid19branching
 
 MODELPATH=models
+
+simulate/main.o : simulate/main.cpp model.h parameter.h trajectory.h particle.h
+	$(CC) $(CFLAGS) -c simulate/main.cpp
 
 data.o : data.cpp data.h
 	$(CC) $(CFLAGS) -c data.cpp
