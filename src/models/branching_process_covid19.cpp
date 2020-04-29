@@ -23,7 +23,7 @@ void Model::simulate(std::vector<double> & model_params, std::vector<std::string
         return;
     }
     // /* For slightly faster implementation, call parameters by index
-    int R0_array_size = ((model_params.size()-3)/2+1)/2;
+    int R0_array_size = ((model_params.size()-5)/2+1)/2;
     double R0_array[R0_array_size];
     std::copy(model_params.begin(), model_params.begin()+R0_array_size, R0_array);
     int R0_change_times[R0_array_size-1];
